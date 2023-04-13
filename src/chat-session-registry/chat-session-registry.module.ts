@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ChatSessionRegistryController } from './chat-session-registry.controller';
+import { ChatSessionRegistryService } from './chat-session-registry.service';
 
 @Module({
-  imports: [],
-  controllers: [ChatSessionRegistryController],
+  providers: [ChatSessionRegistryService],
+  exports: [ChatSessionRegistryService],
 })
 export class ChatSessionRegistryModule {}

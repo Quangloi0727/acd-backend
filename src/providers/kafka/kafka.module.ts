@@ -1,53 +1,78 @@
-import { Module } from '@nestjs/common';
+import { Module, DynamicModule, Global, Provider } from '@nestjs/common';
+import { KafkaService } from './kafka.service';
 import {
-  ClientProvider,
-  ClientsModule,
-  Transport,
-} from '@nestjs/microservices';
-import { KafkaConfigModule } from '../../configs/kafka/config.module';
-import { KafkaConfigService } from '../../configs/kafka/config.service';
+  KafkaModuleOption,
+  KafkaModuleOptionsAsync,
+  KafkaOptionsFactory,
+} from './interfaces';
+import { KafkaModuleOptionsProvider } from './kafka-module-options.provider';
+import { KAFKA_MODULE_OPTIONS } from './constants';
 
-@Module({
-  imports: [
-    ClientsModule.registerAsync([
-      {
-        name: 'KAFKA_SERVICE',
-        useFactory: async (config: KafkaConfigService) => {
-          return {
-            transport: Transport.KAFKA,
-            options: {
-              client: {
-                brokers: [config.broker],
-                connectionTimeout: config.connection_timeout,
-                authenticationTimeout: config.authentication_timeout,
-                reauthenticationThreshold: config.reauthentication_timeout,
-                autoConnect: true,
-                consumeFromBeginning: true,
-                sasl: config.sasl_enable
-                  ? {
-                      mechanism: config.mechanism,
-                      username: config.username,
-                      password: config.password,
-                    }
-                  : null,
-              },
-              producer: {
-                allowAutoTopicCreation: true,
-                transactionTimeout: config.transaction_timeout,
-              },
-              consumer: {
-                allowAutoTopicCreation: true,
-                groupId: config.group_id,
-                consumeFromBeginning: true,
-              },
-              responseDefaultTimeout: config.response_timeout,
-            },
-          } as ClientProvider;
+@Global()
+@Module({})
+export class KafkaModule {
+  static register(options: KafkaModuleOption[]): DynamicModule {
+    const clients = (options || []).map((item) => ({
+      provide: item.name,
+      useValue: new KafkaService(item.options),
+    }));
+
+    return {
+      module: KafkaModule,
+      providers: clients,
+      exports: clients,
+    };
+  }
+
+  public static registerAsync(
+    consumers: string[],
+    connectOptions: KafkaModuleOptionsAsync,
+  ): DynamicModule {
+    const clients = [];
+    for (const consumer of consumers) {
+      clients.push({
+        provide: consumer,
+        useFactory: async (
+          kafkaModuleOptionsProvider: KafkaModuleOptionsProvider,
+        ) => {
+          return new KafkaService(
+            kafkaModuleOptionsProvider.getOptionsByName(consumer),
+          );
         },
-        inject: [KafkaConfigService],
-        imports: [KafkaConfigModule],
-      },
-    ]),
-  ],
-})
-export class KafkaModule {}
+        inject: [KafkaModuleOptionsProvider],
+      });
+    }
+
+    const createKafkaModuleOptionsProvider =
+      this.createKafkaModuleOptionsProvider(connectOptions);
+
+    return {
+      module: KafkaModule,
+      imports: connectOptions.imports || [],
+      providers: [
+        createKafkaModuleOptionsProvider,
+        KafkaModuleOptionsProvider,
+        ...clients,
+      ],
+      exports: [createKafkaModuleOptionsProvider, ...clients],
+    };
+  }
+
+  private static createKafkaModuleOptionsProvider(
+    options: KafkaModuleOptionsAsync,
+  ): Provider {
+    if (options.useFactory) {
+      return {
+        provide: KAFKA_MODULE_OPTIONS,
+        useFactory: options.useFactory,
+        inject: options.inject || [],
+      };
+    }
+    return {
+      provide: KAFKA_MODULE_OPTIONS,
+      useFactory: async (optionsFactory: KafkaOptionsFactory) =>
+        await optionsFactory.creatKafkaModuleOptions(),
+      inject: [options.useExisting || options.useClass],
+    };
+  }
+}

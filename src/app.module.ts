@@ -1,25 +1,25 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { LoggingModule } from './providers/logging/logging.module';
-import { ChatSessionManagerModule } from './chat-session-manager/chat-session-manager.module';
-import { ChatSessionRegistryModule } from './chat-session-registry/chat-session-registry.module';
-import { ChatSessionTrackerModule } from './chat-session-tracker/chat-session-tracker.module';
-import { MessageConsumerModule } from './message-consumer/message-consumer.module';
+import { CommonConfigModule } from './configs/config.module';
 import { DatabaseModule } from './providers/database/database.module';
-import { KafkaModule } from './providers/kafka/kafka.module';
+import { ChatSessionManagerModule } from './chat-session-manager';
+import { ChatSessionRegistryModule } from './chat-session-registry';
+import { ChatSessionTrackerModule } from './chat-session-tracker';
+import { MessageConsumerModule } from './message-consumer';
+import { KafkaProviderModule } from './providers/kafka/provider.module';
+import { FacadeRestApiModule } from './facade-rest-api';
 
 @Module({
   imports: [
-    LoggingModule,
+    CommonConfigModule,
     DatabaseModule,
-    KafkaModule,
+    KafkaProviderModule,
     MessageConsumerModule,
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
     ChatSessionTrackerModule,
+    FacadeRestApiModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

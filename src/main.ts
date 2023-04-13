@@ -1,20 +1,27 @@
 import { NestFactory } from '@nestjs/core';
-import { Transport } from '@nestjs/microservices';
-import { join } from 'path';
 import { AppModule } from './app.module';
-import { protobufPackage } from './protos/chat-session-registry.pb';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { createNestWinstonLogger } from 'nest-winston/dist/winston.providers';
+import { winstonLoggerOptions } from './providers/logging/logging.service';
+// import { gprcOptions } from './providers/grpc/grpc.options';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice(AppModule, {
-    transport: Transport.GRPC,
-    options: {
-      url: '0.0.0.0:50051',
-      package: protobufPackage,
-      protoPath: join(
-        'node_modules/acd-proto/proto/chat-session-registry.proto',
-      ),
-    },
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    logger: createNestWinstonLogger(winstonLoggerOptions),
   });
-  await app.listen();
+  app.enableCors();
+  const config = new DocumentBuilder()
+    .setTitle('ACD Backend')
+    .setDescription('Auto Chat Distribution')
+    .setVersion('1.0')
+    .addTag('acd-backend')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  // app.connectMicroservice(gprcOptions);
+  // await app.startAllMicroservices();
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule, TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
-import { DatabaseConfigModule } from '../../configs/database/config.module';
-import { DatabaseConfigService } from '../../configs/database/config.service';
-import { DatabaseType } from 'typeorm';
-import { LoggingModule } from '../logging/logging.module';
-import { LoggingService } from '../logging/logging.service';
+import { DatabaseConfigModule, DatabaseConfigService } from '../../configs';
+import { LoggingModule, LoggingService } from '../logging';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    TypeOrmModule.forRootAsync({
+    MongooseModule.forRootAsync({
       imports: [DatabaseConfigModule, LoggingModule],
       inject: [DatabaseConfigService, LoggingService],
       useFactory: async (
@@ -16,20 +13,12 @@ import { LoggingService } from '../logging/logging.service';
         logger: LoggingService,
       ) => {
         await logger.debug(
-          'DatabaseModule',
+          DatabaseModule,
           `Connecting to database... with url: ${databaseConfig.url}`,
         );
         return {
-          type: databaseConfig.type as DatabaseType,
-          url: databaseConfig.url,
-          entities: [],
-          migrations: await databaseConfig.migrations(),
-          migrationsRun: false,
-          extra: {
-            trustServerCertificate: true,
-          },
-          autoLoadEntities: true,
-        } as TypeOrmModuleAsyncOptions;
+          uri: databaseConfig.url,
+        };
       },
     }),
   ],
