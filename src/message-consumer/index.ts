@@ -1,3 +1,3 @@
 export * from './message-consumer.module';
 export * from './message-consumer.controller';
-export * from './message-consumer.service';
+export * from './dto/message.dto';

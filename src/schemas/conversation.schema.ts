@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { BaseObject } from '../common/base/base-object';
 
 export type ConversationDocument = Conversation & Document;
 
 @Schema({ collection: 'test-conversation' })
-export class Conversation {
+export class Conversation extends BaseObject<Conversation> {
   @Prop()
-  tenantId: number;
+  tenantId: string;
   @Prop()
   senderId: string;
   @Prop()
@@ -15,6 +16,8 @@ export class Conversation {
   applicationName: string;
   @Prop()
   applicationId: string;
+  @Prop()
+  cloudTenantId: number;
   @Prop()
   channel: string;
   @Prop()
@@ -53,6 +56,8 @@ export class Conversation {
   sla: string;
   @Prop()
   participants: string[];
+
+  conversationId: string;
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);

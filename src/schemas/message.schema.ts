@@ -1,10 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { BaseObject } from '../common/base/base-object';
+import { MessageDto } from '../message-consumer';
+import { MessageType, ParticipantType } from '../common/enums';
+import { Conversation } from './conversation.schema';
 
 export type MessageDocument = Message & Document;
+export class Attachment {
+  fileName: string;
+  directory: string;
+  contentId: string;
+  isAttachment: boolean;
+  payload: string;
+}
 
 @Schema({ collection: 'test-message' })
-export class Message {
+export class Message extends BaseObject<Message> {
   @Prop()
   channel: string;
   @Prop()
@@ -13,8 +24,10 @@ export class Message {
   senderId: string;
   @Prop()
   applicationId: string;
-  @Prop({ required: false })
-  tenantId: number;
+  @Prop()
+  cloudTenantId: number;
+  @Prop()
+  tenantId: string;
   @Prop()
   messageStatus: string;
   @Prop()
@@ -39,22 +52,37 @@ export class Message {
   socialMessageId: string;
   @Prop()
   domain: string;
-  @Prop({ type: 'object' })
-  attachment: string;
+  @Prop()
+  attachment: Attachment;
   @Prop()
   suggestions: string;
   @Prop()
   sender: string;
   @Prop()
   messageResponse: string;
-}
+  conversation: Conversation;
+  startedBy: ParticipantType;
+  messageId: string;
 
-export class Attachment {
-  fileName: string;
-  directory: string;
-  contentId: string;
-  isAttachment: boolean;
-  payload: string;
+  static fromDto(dto: MessageDto) {
+    return new Message({
+      channel: dto.channel,
+      socialMessageId: dto.messageId,
+      text: dto.text,
+      sendFrom: dto.senderId,
+      senderId: dto.senderId,
+      applicationId: dto.applicationId,
+      messageFrom: ParticipantType.CUSTOMER,
+      receivedTime: new Date(dto.timestamp),
+      receivedUnixEpoch: dto.timestamp,
+      messageType:
+        dto.media && dto.media.length > 0
+          ? dto.media[0].mediaType.toLowerCase() === 'image'
+            ? MessageType.IMAGE
+            : MessageType.FILE
+          : MessageType.TEXT,
+    });
+  }
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

@@ -1,15 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { FacadeRestApiController } from './facade-rest-api.controller';
-import { ChatHistoryQueryHandler } from './handlers/history-query.handler';
-import { SendMessageCommandHandler } from './handlers/send-message.handler';
-import { ChatSessionManagerModule } from 'src/chat-session-manager';
-
-const handlers = [ChatHistoryQueryHandler, SendMessageCommandHandler];
+import { AcdCqrsModule } from '../cqrs/acd-cqrs.module';
 
 @Module({
-  imports: [CqrsModule, ChatSessionManagerModule],
-  providers: [...handlers],
+  imports: [CqrsModule, AcdCqrsModule],
   controllers: [FacadeRestApiController],
 })
 export class FacadeRestApiModule {}

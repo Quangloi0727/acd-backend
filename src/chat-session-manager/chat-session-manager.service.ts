@@ -1,42 +1,30 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { AssignmentClient } from '../providers/grpc/grpc.module';
 import { AgentAssignmentServiceClient } from '../protos/assignment.pb';
-import {
-  Conversation,
-  ConversationDocument,
-} from '../schemas/conversation.schema';
-import { Message, MessageDocument } from '../schemas/message.schema';
+import { Conversation } from '../schemas/conversation.schema';
+import { ConversationState } from '../common/enums';
+import { Message } from '../schemas';
 
 @Injectable()
 export class ChatSessionManagerService {
   constructor(
     @Inject(AssignmentClient)
     private agentAssignmentService: AgentAssignmentServiceClient,
-    @InjectModel(Conversation.name)
-    private readonly conversationRepository: Model<ConversationDocument>,
-    @InjectModel(Message.name)
-    private readonly messageRepository: Model<MessageDocument>,
   ) {}
 
-  async createSession(messageId: string): Promise<ConversationDocument> {
-    const message = await this.messageRepository.findById(messageId).exec();
-
-    const conversation = new Conversation();
-    conversation.senderId = message.senderId;
-    conversation.senderName = message.senderName;
-    conversation.channel = message.channel;
-    conversation.applicationId = message.applicationId;
-    conversation.lastText = message.text;
-
-    const conversationDocument = await new this.conversationRepository(
-      conversation,
-    ).save();
-
-    message.conversationId = conversationDocument._id;
-    await this.messageRepository.findByIdAndUpdate(message._id, message).exec();
-    return conversationDocument;
+  async createConversation(message: Message): Promise<Conversation> {
+    return new Conversation({
+      senderId: message.senderId,
+      senderName: message.senderName,
+      applicationId: message.applicationId,
+      conversationState: ConversationState.OPEN,
+      tenantId: message.tenantId,
+      cloudTenantId: message.cloudTenantId,
+      channel: message.channel,
+      lastText: message.text,
+      startedBy: message.messageFrom,
+      startedTime: message.receivedTime,
+    });
   }
 
   async assignAgentToSession(conversationId: string, tenantId: number) {
@@ -47,16 +35,5 @@ export class ChatSessionManagerService {
       });
 
     return availableAgentId;
-  }
-
-  async getAllMessageByConversationId(
-    conversationId: string,
-    tenantId: number,
-  ): Promise<MessageDocument[]> {
-    return await this.messageRepository
-      .find({
-        conversationId: conversationId,
-      })
-      .exec();
   }
 }

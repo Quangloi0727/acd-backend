@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SendMessageCommand } from '../queries/send-message.command';
+import { SendMessageCommand } from '../send-message.command';
 
 @CommandHandler(SendMessageCommand)
 export class SendMessageCommandHandler

@@ -1,0 +1,7 @@
+export enum ConversationState {
+  UNKNOWN = 'UNKNOWN',
+  OPEN = 'OPEN',
+  INTERACTIVE = 'INTERACTIVE',
+  NON_INTERACTIVE = 'NON_INTERACTIVE',
+  CLOSE = 'CLOSE',
+}
