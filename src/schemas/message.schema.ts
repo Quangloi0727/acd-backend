@@ -4,6 +4,7 @@ import { BaseObject } from '../common/base/base-object';
 import { MessageDto } from '../message-consumer';
 import { MessageType, ParticipantType } from '../common/enums';
 import { Conversation } from './conversation.schema';
+import { v4 as uuidv4 } from 'uuid';
 
 export type MessageDocument = Message & Document;
 export class Attachment {
@@ -14,8 +15,15 @@ export class Attachment {
   payload: string;
 }
 
-@Schema({ collection: 'test-message' })
+@Schema({ collection: 'message' })
 export class Message extends BaseObject<Message> {
+  @Prop({
+    type: String,
+    default: function genUUID() {
+      return uuidv4();
+    },
+  })
+  _id: string;
   @Prop()
   channel: string;
   @Prop()
@@ -35,7 +43,7 @@ export class Message extends BaseObject<Message> {
   @Prop()
   messageFrom: string;
   @Prop()
-  sendFrom: string;
+  sentFrom: string;
   @Prop()
   receivedTime: Date;
   @Prop()
@@ -69,7 +77,7 @@ export class Message extends BaseObject<Message> {
       channel: dto.channel,
       socialMessageId: dto.messageId,
       text: dto.text,
-      sendFrom: dto.senderId,
+      sentFrom: dto.senderId,
       senderId: dto.senderId,
       applicationId: dto.applicationId,
       messageFrom: ParticipantType.CUSTOMER,

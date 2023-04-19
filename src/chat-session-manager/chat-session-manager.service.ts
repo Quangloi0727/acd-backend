@@ -24,6 +24,11 @@ export class ChatSessionManagerService {
       lastText: message.text,
       startedBy: message.messageFrom,
       startedTime: message.receivedTime,
+      numOfParticipants: 1,
+      numOfMessages: 1,
+      lastTime: new Date(),
+      lastActionTime: new Date(),
+      participants: [message.senderId],
     });
   }
 

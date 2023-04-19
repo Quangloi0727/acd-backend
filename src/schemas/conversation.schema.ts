@@ -1,11 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { BaseObject } from '../common/base/base-object';
+import { v4 as uuidv4 } from 'uuid';
 
-export type ConversationDocument = Conversation & Document;
+export type ConversationDocument = Conversation & Document<string>;
 
-@Schema({ collection: 'test-conversation' })
+@Schema({ collection: 'conversation' })
 export class Conversation extends BaseObject<Conversation> {
+  @Prop({
+    type: String,
+    default: uuidv4(),
+  })
+  _id: string;
   @Prop()
   tenantId: string;
   @Prop()
@@ -37,7 +43,7 @@ export class Conversation extends BaseObject<Conversation> {
   @Prop()
   lastUpdateVersion: number;
   @Prop()
-  numOfmessages: number;
+  numOfMessages: number;
   @Prop()
   startedBy: string;
   @Prop()
@@ -56,7 +62,6 @@ export class Conversation extends BaseObject<Conversation> {
   sla: string;
   @Prop()
   participants: string[];
-
   conversationId: string;
 }
 

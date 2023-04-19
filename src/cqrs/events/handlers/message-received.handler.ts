@@ -10,6 +10,7 @@ import { ChatSessionManagerService } from '../../../chat-session-manager';
 import { ChatSessionRegistryService } from '../../../chat-session-registry';
 import {
   ChannelType,
+  MessageStatus,
   NotifyEventType,
   ParticipantType,
 } from '../../../common/enums';
@@ -18,7 +19,7 @@ import {
   SaveMessageCommand,
   TenantByApplicationQuery,
 } from '../../../cqrs';
-import { Message, MessageDocument, TenantDocument } from '../../../schemas';
+import { Message, Tenant } from '../../../schemas';
 
 @EventsHandler(MessageReceivedEvent)
 export class MessageReceivedEventHandler
@@ -42,7 +43,7 @@ export class MessageReceivedEventHandler
 
     const tenant = await this.queryBus.execute<
       TenantByApplicationQuery,
-      TenantDocument
+      Tenant
     >(new TenantByApplicationQuery(event.message.applicationId));
     if (!tenant) {
       return;
@@ -52,6 +53,7 @@ export class MessageReceivedEventHandler
     message.messageOrder = message.receivedUnixEpoch;
     message.cloudTenantId = tenant.cloudTenantId;
     message.tenantId = tenant._id;
+    message.messageStatus = MessageStatus.SENT;
     message.startedBy = ParticipantType.CUSTOMER;
     message.senderName =
       message.channel === ChannelType.ZL_MESSAGE
@@ -75,20 +77,22 @@ export class MessageReceivedEventHandler
       conversationDocument._id,
       conversationDocument.cloudTenantId,
     );
-
+    message.conversationId = conversationDocument._id;
+    conversationDocument.conversationId = conversationDocument._id;
+    message.conversation = conversationDocument.toObject();
+    message.conversation.conversationId = conversationDocument._id;
     //save message
-    message.conversationId = conversationDocument.id;
-    conversationDocument.conversationId = conversationDocument.id;
-    message.conversation = conversationDocument;
     const messageDocument = await this.commandBus.execute<
       SaveMessageCommand,
-      MessageDocument
+      Message
     >(new SaveMessageCommand(message));
     message.messageId = messageDocument._id;
+
     const rooms = [
       `${message.cloudTenantId}_${message.applicationId}`,
       `${message.cloudTenantId}_${message.applicationId}_supervisor`,
     ];
+    console.log(JSON.stringify(message));
     // notify to agent
     await this.commandBus.execute(
       new NotifyNewMessageToAgentCommand(

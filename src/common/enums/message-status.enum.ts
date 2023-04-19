@@ -1,7 +1,7 @@
 export enum MessageStatus {
-  UNKNOWN,
-  PENDING,
-  SENT,
-  SEEN,
-  ERROR,
+  UNKNOWN = 'UNKNOWN',
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  SEEN = 'SEEN',
+  ERROR = 'ERROR',
 }

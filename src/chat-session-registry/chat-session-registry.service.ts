@@ -19,10 +19,10 @@ export class ChatSessionRegistryService {
         applicationId: applicationId,
         senderId: senderId,
       })
+      .sort('-lastTime')
       .exec();
-
     return conversation &&
-      conversation.conversationState != ConversationState.CLOSE
+      conversation.conversationState !== ConversationState.CLOSE
       ? conversation
       : null;
   }

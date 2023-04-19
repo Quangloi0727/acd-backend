@@ -28,6 +28,9 @@ export class NotifyNewMessageToAgentCommandHandler
           .post<NotificationServerApiBaseResponse>(
             `${base_url}/notification/new`,
             command,
+            {
+              headers: { 'Content-Type': 'application/json' },
+            },
           )
           .pipe(
             catchError((error: AxiosError) => {
