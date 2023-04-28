@@ -2,6 +2,9 @@ FROM node:18-alpine AS build
 WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 COPY --chown=node:node . .
+RUN apk update && \
+    apk add --update git && \
+    apk add --update openssh
 RUN npm config set fetch-retries 5
 RUN npm config set fetch-retry-mintimeout 600000
 RUN npm config set fetch-retry-maxtimeout 1200000
