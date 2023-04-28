@@ -16,5 +16,5 @@ COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 ENV TZ=Asia/Ho_Chi_Minh
 
-EXPOSE 5580
+EXPOSE 3006
 CMD [ "node", "dist/src/main.js" ]
