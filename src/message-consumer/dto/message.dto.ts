@@ -4,6 +4,7 @@ export class MessageDto {
   messageId: string;
   text: string;
   timestamp: number;
+  senderName:string;
   senderId: string;
   applicationId: string;
   channel: ChannelType;
