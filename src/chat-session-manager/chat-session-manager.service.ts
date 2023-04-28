@@ -1,16 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { AssignmentClient } from '../providers/grpc/grpc.module';
-import { AgentAssignmentServiceClient } from '../protos/assignment.pb';
-import { Conversation } from '../schemas/conversation.schema';
-import { ConversationState } from '../common/enums';
-import { Message } from '../schemas';
+import { Inject, Injectable } from '@nestjs/common'
+import { AssignmentClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
+import { RequestGetAgentAssignmentControllerClient } from '../protos/assignment.pb'
+import { Conversation } from '../schemas/conversation.schema'
+import { ConversationState } from '../common/enums'
+import { Message } from '../schemas'
+import { SendMessageCommand } from '../cqrs/commands/send-message.command'
+import { ZaloConnectorServiceClient, SendMessageToZaloRequest } from '../protos/zalo-connector.pb'
+import { lastValueFrom } from 'rxjs'
 
 @Injectable()
 export class ChatSessionManagerService {
   constructor(
     @Inject(AssignmentClient)
-    private agentAssignmentService: AgentAssignmentServiceClient,
-  ) {}
+    private requestGetAgentAssignmentControllerClient: RequestGetAgentAssignmentControllerClient,
+    @Inject(ZaloConnectorClient)
+    private zaloConnectorService: ZaloConnectorServiceClient,
+  ) { }
 
   async createConversation(message: Message): Promise<Conversation> {
     return new Conversation({
@@ -29,16 +34,23 @@ export class ChatSessionManagerService {
       lastTime: new Date(),
       lastActionTime: new Date(),
       participants: [message.senderId],
-    });
+    })
   }
 
   async assignAgentToSession(conversationId: string, tenantId: number) {
-    const availableAgentId =
-      await this.agentAssignmentService.assignAgentToConversation({
-        conversationId: conversationId,
-        tenantId: tenantId,
-      });
+    try {
+      const availableAgentId = await lastValueFrom(
+        this.requestGetAgentAssignmentControllerClient.requestGetAgentAssignment({
+          conversationId: conversationId,
+          tenantId: tenantId,
+        }))
+      return availableAgentId
+    } catch (error) {
+      return error
+    }
+  };
 
-    return availableAgentId;
+  async requestSendMessageToZaloConnector(command: SendMessageCommand) {
+    return lastValueFrom(this.zaloConnectorService.sendMessageToZalo(command))
   }
 }

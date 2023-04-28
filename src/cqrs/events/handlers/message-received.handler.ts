@@ -3,23 +3,25 @@ import {
   EventsHandler,
   CommandBus,
   QueryBus,
-} from '@nestjs/cqrs';
-import { MessageReceivedEvent } from '../message-received.event';
-import { LoggingService } from '../../../providers/logging';
-import { ChatSessionManagerService } from '../../../chat-session-manager';
-import { ChatSessionRegistryService } from '../../../chat-session-registry';
+} from '@nestjs/cqrs'
+import { MessageReceivedEvent } from '../message-received.event'
+import { LoggingService } from '../../../providers/logging'
+import { ChatSessionManagerService } from '../../../chat-session-manager'
+import { ChatSessionRegistryService } from '../../../chat-session-registry'
 import {
   ChannelType,
+  ConversationState,
   MessageStatus,
   NotifyEventType,
   ParticipantType,
-} from '../../../common/enums';
+} from '../../../common/enums'
 import {
   NotifyNewMessageToAgentCommand,
   SaveMessageCommand,
   TenantByApplicationQuery,
-} from '../../../cqrs';
-import { Message, Tenant } from '../../../schemas';
+  AllParticipantQuery
+} from '../../../cqrs'
+import { Message, Tenant, Participant } from '../../../schemas'
 
 @EventsHandler(MessageReceivedEvent)
 export class MessageReceivedEventHandler
@@ -30,79 +32,95 @@ export class MessageReceivedEventHandler
     private readonly chatSessionManagerService: ChatSessionManagerService,
     private readonly chatSessionRegistryService: ChatSessionRegistryService,
     private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly queryBus: QueryBus
+  ) { }
   async handle(event: MessageReceivedEvent) {
     await this.loggingService.debug(
       MessageReceivedEventHandler,
       `Received a message: ${JSON.stringify(event)}`,
-    );
+    )
     if (!event.message) {
-      return;
+      return
     }
 
     const tenant = await this.queryBus.execute<
       TenantByApplicationQuery,
       Tenant
-    >(new TenantByApplicationQuery(event.message.applicationId));
+    >(new TenantByApplicationQuery(event.message.applicationId))
     if (!tenant) {
-      return;
+      return
     }
 
-    const message = Message.fromDto(event.message);
-    message.messageOrder = message.receivedUnixEpoch;
-    message.cloudTenantId = tenant.cloudTenantId;
-    message.tenantId = tenant._id;
-    message.messageStatus = MessageStatus.SENT;
-    message.startedBy = ParticipantType.CUSTOMER;
-    message.senderName =
-      message.channel === ChannelType.ZL_MESSAGE
-        ? 'Liên hệ chưa follow OA'
-        : 'Liên hệ mới';
+    const message = Message.fromDto(event.message)
+    message.messageOrder = message.receivedUnixEpoch
+    message.cloudTenantId = tenant.cloudTenantId
+    message.tenantId = tenant._id
+    message.messageStatus = MessageStatus.SENT
+    message.startedBy = ParticipantType.CUSTOMER
+    message.senderName = event.message.senderName
 
     let conversationDocument =
       await this.chatSessionRegistryService.getConversation(
         message.applicationId,
         message.senderId,
-      );
+      )
 
     if (!conversationDocument) {
       const conversation =
-        await this.chatSessionManagerService.createConversation(message);
+        await this.chatSessionManagerService.createConversation(message)
       conversationDocument =
-        await this.chatSessionRegistryService.saveConversation(conversation);
+        await this.chatSessionRegistryService.saveConversation(conversation)
     }
 
-    await this.chatSessionManagerService.assignAgentToSession(
+    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(
       conversationDocument._id,
       conversationDocument.cloudTenantId,
-    );
-    message.conversationId = conversationDocument._id;
-    conversationDocument.conversationId = conversationDocument._id;
-    message.conversation = conversationDocument.toObject();
-    message.conversation.conversationId = conversationDocument._id;
+    )
+
+    // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
+    const checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
+
+    if (checkAgentAssigned == true) {
+      conversationDocument.conversationState = ConversationState.INTERACTIVE
+      conversationDocument.agentPicked = responseAssign.agentId
+      conversationDocument.save()
+    }
+
+    message.conversationId = conversationDocument._id
+    conversationDocument.conversationId = conversationDocument._id
+    message.conversation = conversationDocument.toObject()
+    message.conversation.conversationId = conversationDocument._id
     //save message
     const messageDocument = await this.commandBus.execute<
       SaveMessageCommand,
       Message
-    >(new SaveMessageCommand(message));
-    message.messageId = messageDocument._id;
+    >(new SaveMessageCommand(message))
+    message.messageId = messageDocument._id
 
-    const rooms = [
-      `${message.cloudTenantId}_${message.applicationId}`,
-      `${message.cloudTenantId}_${message.applicationId}_supervisor`,
-    ];
-    console.log(JSON.stringify(message));
+    let rooms = []
+    if (checkAgentAssigned == true) {
+      const socketIdOfAgent = await this.queryBus.execute<AllParticipantQuery, Participant>(new AllParticipantQuery(responseAssign.agentId))
+      rooms.push(
+        `${socketIdOfAgent.socketId}`,
+      )
+    } else {
+      rooms.push(
+        `${message.cloudTenantId}_${message.applicationId}`,
+        `${message.cloudTenantId}_${message.applicationId}_supervisor`
+      )
+    }
+
+    console.log(JSON.stringify(message))
     // notify to agent
     await this.commandBus.execute(
       new NotifyNewMessageToAgentCommand(
         ParticipantType.AGENT,
-        NotifyEventType.NEW_MESSAGE,
+        checkAgentAssigned == true ? NotifyEventType.PICK_CONVERSATION : NotifyEventType.NEW_MESSAGE,
         rooms.join(','),
         {
           message: message,
         },
       ),
-    );
+    )
   }
 }
