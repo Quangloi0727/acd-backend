@@ -3,9 +3,9 @@ pipeline {
     environment {
         //docker config
         REGISTRY_URL = "192.168.15.112:5000/${env.GIT_BRANCH}"
-        IMAGE_NAME = 'acd_backend'
+        IMAGE_NAME = 'acd-backend'
         BUILD_VERSION = GIT_COMMIT.take(8)
-      	APP_NAME = 'acd_backend'
+      	APP_NAME = 'acd-backend'
 
         //notify config
         SKYPE_ACCOUNT = credentials('skype_account')
