@@ -1,18 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { AssignmentClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
-import { RequestGetAgentAssignmentControllerClient } from '../protos/assignment.pb'
+import { AgentAssignmentServiceClient } from '../protos/assignment.pb'
 import { Conversation } from '../schemas/conversation.schema'
 import { ConversationState } from '../common/enums'
 import { Message } from '../schemas'
 import { SendMessageCommand } from '../cqrs/commands/send-message.command'
-import { ZaloConnectorServiceClient, SendMessageToZaloRequest } from '../protos/zalo-connector.pb'
+import { ZaloConnectorServiceClient } from '../protos/zalo-connector.pb'
 import { lastValueFrom } from 'rxjs'
 
 @Injectable()
 export class ChatSessionManagerService {
   constructor(
     @Inject(AssignmentClient)
-    private requestGetAgentAssignmentControllerClient: RequestGetAgentAssignmentControllerClient,
+    private agentAssignmentServiceClient: AgentAssignmentServiceClient,
     @Inject(ZaloConnectorClient)
     private zaloConnectorService: ZaloConnectorServiceClient,
   ) { }
@@ -40,7 +40,7 @@ export class ChatSessionManagerService {
   async assignAgentToSession(conversationId: string, tenantId: number) {
     try {
       const availableAgentId = await lastValueFrom(
-        this.requestGetAgentAssignmentControllerClient.requestGetAgentAssignment({
+        this.agentAssignmentServiceClient.assignAgentToConversation({
           conversationId: conversationId,
           tenantId: tenantId,
         }))

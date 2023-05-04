@@ -1,8 +1,8 @@
 import { Global, Module } from '@nestjs/common'
 import { ClientGrpc, ClientsModule } from '@nestjs/microservices'
 import {
-  REQUEST_GET_AGENT_ASSIGNMENT_CONTROLLER_SERVICE_NAME,
-  RequestGetAgentAssignmentControllerClient,
+  AGENT_ASSIGNMENT_SERVICE_NAME,
+  AgentAssignmentServiceClient,
 } from '../../protos/assignment.pb'
 import { ASM_SERVICE_NAME, AsmServiceClient } from '../../protos/asm.pb'
 import { assignmentClientOptions } from './assignment-client.options'
@@ -17,11 +17,11 @@ export const ZaloConnectorClient = Symbol('ZALOCONNECTOR')
 const assignmentClientFactory = {
   provide: AssignmentClient,
   useFactory: (client: ClientGrpc) => {
-    return client.getService<RequestGetAgentAssignmentControllerClient>(
-      REQUEST_GET_AGENT_ASSIGNMENT_CONTROLLER_SERVICE_NAME,
+    return client.getService<AgentAssignmentServiceClient>(
+      AGENT_ASSIGNMENT_SERVICE_NAME,
     )
   },
-  inject: [REQUEST_GET_AGENT_ASSIGNMENT_CONTROLLER_SERVICE_NAME],
+  inject: [AGENT_ASSIGNMENT_SERVICE_NAME],
 }
 
 const asmClientFactory = {
@@ -45,7 +45,7 @@ const zaloConnectorClientFactory = {
   imports: [
     ClientsModule.register([
       {
-        name: REQUEST_GET_AGENT_ASSIGNMENT_CONTROLLER_SERVICE_NAME,
+        name: AGENT_ASSIGNMENT_SERVICE_NAME,
         ...assignmentClientOptions,
       },
       {
