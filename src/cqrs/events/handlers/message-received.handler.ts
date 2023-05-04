@@ -110,7 +110,8 @@ export class MessageReceivedEventHandler
       )
     }
 
-    console.log(JSON.stringify(message))
+    console.log("push to room", rooms.join(','))
+    console.log("message send", JSON.stringify(message))
     // notify to agent
     await this.commandBus.execute(
       new NotifyNewMessageToAgentCommand(
