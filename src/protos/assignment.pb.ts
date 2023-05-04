@@ -4,12 +4,12 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "com.metech.acd";
 
-export interface DataRequest {
+export interface AssignAgentToConversationRequest {
   tenantId: number;
   conversationId: string;
 }
 
-export interface DataResponse {
+export interface AssignAgentToConversationResponse {
   tenantId: number;
   conversationId: string;
   agentId: string;
@@ -17,31 +17,32 @@ export interface DataResponse {
 
 export const COM_METECH_ACD_PACKAGE_NAME = "com.metech.acd";
 
-export interface RequestGetAgentAssignmentControllerClient {
-  requestGetAgentAssignment(request: DataRequest): Observable<DataResponse>;
+export interface AgentAssignmentServiceClient {
+  assignAgentToConversation(request: AssignAgentToConversationRequest): Observable<AssignAgentToConversationResponse>;
 }
 
-export interface RequestGetAgentAssignmentControllerController {
-  requestGetAgentAssignment(request: DataRequest): Promise<DataResponse> | Observable<DataResponse> | DataResponse;
+export interface AgentAssignmentServiceController {
+  assignAgentToConversation(
+    request: AssignAgentToConversationRequest,
+  ):
+    | Promise<AssignAgentToConversationResponse>
+    | Observable<AssignAgentToConversationResponse>
+    | AssignAgentToConversationResponse;
 }
 
-export function RequestGetAgentAssignmentControllerControllerMethods() {
+export function AgentAssignmentServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["requestGetAgentAssignment"];
+    const grpcMethods: string[] = ["assignAgentToConversation"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("RequestGetAgentAssignmentController", method)(constructor.prototype[method], method, descriptor);
+      GrpcMethod("AgentAssignmentService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("RequestGetAgentAssignmentController", method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      GrpcStreamMethod("AgentAssignmentService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const REQUEST_GET_AGENT_ASSIGNMENT_CONTROLLER_SERVICE_NAME = "RequestGetAgentAssignmentController";
+export const AGENT_ASSIGNMENT_SERVICE_NAME = "AgentAssignmentService";

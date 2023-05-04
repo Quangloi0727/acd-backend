@@ -5,15 +5,14 @@ import { Observable } from "rxjs";
 export const protobufPackage = "com.metech.acd";
 
 export interface GetAvailableAgentsRequest {
-  tentantId: number;
+  tenantId: number;
+  conversationId: string;
 }
 
 export interface GetAvailableAgentsResponse {
-  agents: Agent[];
-}
-
-export interface Agent {
-  agentId: number;
+  tenantId: number;
+  conversationId: string;
+  agentId: string;
 }
 
 export const COM_METECH_ACD_PACKAGE_NAME = "com.metech.acd";
