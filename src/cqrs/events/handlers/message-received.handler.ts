@@ -76,7 +76,7 @@ export class MessageReceivedEventHandler
       conversationDocument._id,
       conversationDocument.cloudTenantId,
     )
-    console.log("response assign agent is", responseAssign)
+    console.log("response assign agent is", responseAssign.agentId)
 
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     const checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
@@ -101,7 +101,7 @@ export class MessageReceivedEventHandler
     let rooms = []
     if (checkAgentAssigned == true) {
       const socketIdOfAgent = await this.queryBus.execute<AllParticipantQuery, Participant>(new AllParticipantQuery(responseAssign.agentId))
-      console.log("find socket agent is: ", socketIdOfAgent)
+      console.log("find socket agent is: ", socketIdOfAgent.socketId)
       rooms.push(
         `${socketIdOfAgent.socketId}`,
       )
