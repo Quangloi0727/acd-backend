@@ -13,8 +13,7 @@ export class ParticipantQueryHandler
     private readonly model: Model<ParticipantDocument>,
   ) { }
 
-  async execute(query: AllParticipantQuery): Promise<ParticipantDocument[]> {
-    if (query.agentId) return this.model.findOne({ cloudAgentId: query.agentId })
+  async execute(): Promise<ParticipantDocument[]> {
     return await this.model.find().exec()
   }
 

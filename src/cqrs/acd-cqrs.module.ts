@@ -20,12 +20,18 @@ import {
   SaveConversationCommandHandler,
   SaveMessageCommandHandler,
   SendMessageCommandHandler,
+  PickConversationCommandHandler,
+  FindByChannelsAndStatesCommandHandler,
+  FindBySenderCommandHandler,
+  CloseConversationCommandHandler,
+  CountConversationOpenCommandHandler,
+  ReopenConversationCommandHandler
 } from './commands';
 import { MessageReceivedEventHandler } from './events';
 import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
-  TenantByApplicationQueryHandler,
+  TenantByApplicationQueryHandler
 } from './queries';
 
 const handlers = [
@@ -33,12 +39,16 @@ const handlers = [
   SaveConversationCommandHandler,
   SendMessageCommandHandler,
   NotifyNewMessageToAgentCommandHandler,
-
+  PickConversationCommandHandler,
+  CloseConversationCommandHandler,
+  FindByChannelsAndStatesCommandHandler,
+  FindBySenderCommandHandler,
   MessageReceivedEventHandler,
-
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
+  CountConversationOpenCommandHandler,
+  ReopenConversationCommandHandler
 ];
 
 @Module({

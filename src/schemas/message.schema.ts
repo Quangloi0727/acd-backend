@@ -1,10 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { BaseObject } from '../common/base/base-object';
 import { MessageDto } from '../message-consumer';
 import { MessageType, ParticipantType } from '../common/enums';
 import { Conversation } from './conversation.schema';
-import { v4 as uuidv4 } from 'uuid';
 
 export type MessageDocument = Message & Document;
 export class Attachment {
@@ -17,72 +16,67 @@ export class Attachment {
 
 @Schema({ collection: 'message' })
 export class Message extends BaseObject<Message> {
-  @Prop({
-    type: String,
-    default: function genUUID() {
-      return uuidv4();
-    },
-  })
-  _id: string;
   @Prop()
   channel: string;
-  @Prop()
+
+  @Prop({  type: mongoose.Schema.Types.ObjectId ,ref:'Conversation'})
   conversationId: string;
+
   @Prop()
   senderId: string;
+
   @Prop()
   applicationId: string;
+
+  @Prop()
+  applicationName: string;
+
   @Prop()
   cloudTenantId: number;
+
   @Prop()
   tenantId: string;
+
   @Prop()
   messageStatus: string;
+  
   @Prop()
   messageType: string;
+
   @Prop()
   messageFrom: string;
+
   @Prop()
-  sentFrom: string;
-  @Prop()
-  receivedTime: Date;
-  @Prop()
-  receivedUnixEpoch: number;
-  @Prop()
-  messageOrder: number;
+  sendFrom: string;
+
   @Prop()
   text: string;
-  @Prop()
-  phoneNumber: string;
+
   @Prop()
   senderName: string;
+
   @Prop()
   socialMessageId: string;
-  @Prop()
-  domain: string;
+
   @Prop()
   attachment: Attachment;
-  @Prop()
-  suggestions: string;
-  @Prop()
-  sender: string;
+
   @Prop()
   messageResponse: string;
-  conversation: Conversation;
-  startedBy: ParticipantType;
-  messageId: string;
+
+  @Prop()
+  receivedTime: Date;
 
   static fromDto(dto: MessageDto) {
     return new Message({
       channel: dto.channel,
       socialMessageId: dto.messageId,
       text: dto.text,
-      sentFrom: dto.senderId,
+      sendFrom: dto.senderId,
       senderId: dto.senderId,
       applicationId: dto.applicationId,
+      receivedTime: dto.receivedTime,
       messageFrom: ParticipantType.CUSTOMER,
-      receivedTime: new Date(dto.timestamp),
-      receivedUnixEpoch: dto.timestamp,
       messageType:
         dto.media && dto.media.length > 0
           ? dto.media[0].mediaType.toLowerCase() === 'image'
