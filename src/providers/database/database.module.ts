@@ -17,7 +17,7 @@ import { MongooseModule } from '@nestjs/mongoose';
           `Connecting to database... with url: ${databaseConfig.url}`,
         );
         return {
-          uri: databaseConfig.url,
+          uri: databaseConfig.url
         };
       },
     }),

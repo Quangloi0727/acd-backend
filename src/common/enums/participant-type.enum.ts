@@ -4,3 +4,8 @@ export enum ParticipantType {
   CUSTOMER = 'CUSTOMER',
   BOT = 'BOT',
 }
+
+export enum ParticipantState {
+  ONLINE = 'ONLINE',
+  OFFLINE = 'OFFLINE'
+}

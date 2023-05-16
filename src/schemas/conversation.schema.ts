@@ -1,68 +1,59 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { BaseObject } from '../common/base/base-object';
-import { v4 as uuidv4 } from 'uuid';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import mongoose, { Document } from 'mongoose'
+import { BaseObject } from '../common/base/base-object'
+import { v4 as uuidv4 } from 'uuid'
 
-export type ConversationDocument = Conversation & Document<string>;
+export type ConversationDocument = Conversation & Document<string>
 
 @Schema({ collection: 'conversation' })
 export class Conversation extends BaseObject<Conversation> {
-  @Prop({
-    type: String,
-    default: uuidv4(),
-  })
-  _id: string;
   @Prop()
-  tenantId: string;
+  tenantId: string
+
   @Prop()
-  senderId: string;
+  senderId: string
+
   @Prop()
-  senderName: string;
+  senderName: string
+
   @Prop()
-  applicationName: string;
+  applicationName: string
+
   @Prop()
-  applicationId: string;
+  applicationId: string
+
   @Prop()
-  cloudTenantId: number;
+  cloudTenantId: number
+
   @Prop()
-  channel: string;
+  channel: string
+
   @Prop()
-  referenceId: string;
+  conversationState: string
+
   @Prop()
-  conversationState: string;
+  agentPicked: number
+
   @Prop()
-  numOfParticipants: number;
+  lastTime: Date
+
   @Prop()
-  lastText: string;
+  startedTime: Date
+
   @Prop()
-  lastTime: Date;
+  pickConversationTime: Date
+
   @Prop()
-  lastTimeUnixEpoch: number;
+  closedTime: Date
+
   @Prop()
-  lastActionTime: Date;
-  @Prop()
-  lastUpdateVersion: number;
-  @Prop()
-  numOfMessages: number;
-  @Prop()
-  startedBy: string;
-  @Prop()
-  startedTime: Date;
-  @Prop()
-  closedTime: Date;
-  @Prop()
-  participantClosed: string;
-  @Prop()
-  pickConversationTime: Date;
-  @Prop()
-  agentPicked: number;
-  @Prop()
-  firstMessageId: string;
-  @Prop()
-  sla: string;
-  @Prop()
-  participants: string[];
-  conversationId: string;
+  participants: string[]
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message' })
+  lastMessage: string
+
+  @Prop({ ref: 'Message' })
+  messages: string[]
 }
 
-export const ConversationSchema = SchemaFactory.createForClass(Conversation);
+export const ConversationSchema = SchemaFactory.createForClass(Conversation)
