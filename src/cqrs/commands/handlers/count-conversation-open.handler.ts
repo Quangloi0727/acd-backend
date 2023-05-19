@@ -1,11 +1,9 @@
-import { BadRequestException } from "@nestjs/common"
 import { ICommandHandler, CommandHandler, CommandBus } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { ConversationState, NotifyEventType, ParticipantType } from "../../../common/enums"
+import { ConversationState } from "../../../common/enums"
 import { Conversation, ConversationDocument } from "src/schemas"
 import { LoggingService } from "../../../providers/logging"
-import { NotifyNewMessageToAgentCommand } from "../notify-new-message-to-agent.command"
 import { CountConversationOpenCommand } from "../count-conversation-open.command"
 
 @CommandHandler(CountConversationOpenCommand)
@@ -13,8 +11,7 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
     constructor(
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
-        private readonly loggingService: LoggingService,
-        private readonly commandBus: CommandBus
+        private readonly loggingService: LoggingService
     ) { }
 
     async execute(body) {
@@ -24,7 +21,7 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
             applicationId: { $in: supportApplicationIds },
             cloudTenantId: tenantId
         }
-        const totalOpen = await this.model.aggregate([
+        const Open = this.model.aggregate([
             {
                 $group: {
                     _id: {
@@ -43,7 +40,7 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
             }
         ])
 
-        const totalInteractive = await this.model.aggregate([
+        const Interactive = this.model.aggregate([
             {
                 $group: {
                     _id: {
@@ -63,6 +60,8 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
             }
         ])
 
+        const [totalOpen, totalInteractive] = await Promise.all([Open, Interactive])
+        
         return {
             statusCode: 200,
             success: true,

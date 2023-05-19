@@ -9,7 +9,6 @@ import { LoggingService } from '../../../providers/logging'
 import { ChatSessionManagerService } from '../../../chat-session-manager'
 import { ChatSessionRegistryService } from '../../../chat-session-registry'
 import {
-  ChannelType,
   ConversationState,
   MessageStatus,
   NotifyEventType,
@@ -18,8 +17,7 @@ import {
 import {
   NotifyNewMessageToAgentCommand,
   SaveMessageCommand,
-  TenantByApplicationQuery,
-  AllParticipantQuery
+  TenantByApplicationQuery
 } from '../../../cqrs'
 import { Message, Tenant } from '../../../schemas'
 
@@ -34,6 +32,7 @@ export class MessageReceivedEventHandler
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus
   ) { }
+
   async handle(event: MessageReceivedEvent) {
     await this.loggingService.debug(MessageReceivedEventHandler, `Received a message from zalo connector: ${JSON.stringify(event)}`)
     await this.loggingService.info(MessageReceivedEventHandler, `Received a message from zalo connector,messageId: ${JSON.stringify(event?.message?.messageId)}`)
@@ -45,7 +44,6 @@ export class MessageReceivedEventHandler
 
     const message = Message.fromDto(event.message)
     message.cloudTenantId = tenant.cloudTenantId
-    message.tenantId = tenant._id
     message.messageStatus = MessageStatus.SENT
     message.senderName = event.message.senderName
     message.receivedTime = new Date()
@@ -73,26 +71,11 @@ export class MessageReceivedEventHandler
       //save message
       message.conversationId = conversationCreated._id
       const messageDocument = await this.commandBus.execute<SaveMessageCommand, Message>(new SaveMessageCommand(message))
-
-      const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationCreated._id, conversationCreated.cloudTenantId)
-      // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
-      checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
-      await this.loggingService.info(MessageReceivedEventHandler, `Response assign conversationId ${conversationCreated._id} to agent is: ${responseAssign.agentId}`)
-      if (checkAgentAssigned == true) {
-        conversationCreated.conversationState = ConversationState.INTERACTIVE
-        conversationCreated.agentPicked = responseAssign.agentId
-        // set room
-        rooms.push(
-          `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
-        )
-      } else {
-        rooms.push(
-          `${message.cloudTenantId}_${message.applicationId}`
-        )
-      }
       conversationCreated.lastMessage = messageDocument['_id']
       conversationCreated.messages.push(messageDocument['_id'])
-      conversationCreated.save()
+
+      await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+
       message['conversation'] = conversationCreated.toObject()
       message['conversationState'] = ConversationState.INTERACTIVE
       message['conversation']['conversationState'] = ConversationState.INTERACTIVE
@@ -107,23 +90,9 @@ export class MessageReceivedEventHandler
         conversationDocument.messages.push(messageDocument['_id'])
         conversationDocument.lastTime = new Date()
         conversationDocument.lastMessage = messageDocument['_id']
-        const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId)
-        // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
-        checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
-        await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)
-        if (checkAgentAssigned == true) {
-          conversationDocument.conversationState = ConversationState.INTERACTIVE
-          conversationDocument.agentPicked = responseAssign.agentId
-          // set room
-          rooms.push(
-            `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
-          )
-        } else {
-          rooms.push(
-            `${message.cloudTenantId}_${message.applicationId}`
-          )
-        }
-        conversationDocument.save()
+
+        await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message)
+
         message['conversation'] = conversationDocument.toObject()
         message['lastMessage'] = {
           messageType: message.messageType,
@@ -148,16 +117,8 @@ export class MessageReceivedEventHandler
         await this.loggingService.debug(MessageReceivedEventHandler, `Message send: ${JSON.stringify(message)}`)
 
         // notify to agent
-        return await this.commandBus.execute(
-          new NotifyNewMessageToAgentCommand(
-            ParticipantType.AGENT,
-            NotifyEventType.MESSAGE_TRANSFERED,
-            rooms.join(','),
-            {
-              message: message,
-            },
-          )
-        )
+        return await this.notifyToAgent(rooms, NotifyEventType.MESSAGE_TRANSFERED, message)
+
       } else if (conversationDocument.conversationState == ConversationState.CLOSE) {
         const conversation = await this.chatSessionManagerService.createConversation(message)
         const conversationCreated = await this.chatSessionRegistryService.saveConversation(conversation)
@@ -166,25 +127,11 @@ export class MessageReceivedEventHandler
         message.conversationId = conversationCreated._id
         const messageDocument = await this.commandBus.execute<SaveMessageCommand, Message>(new SaveMessageCommand(message))
 
-        const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationCreated._id, conversationCreated.cloudTenantId)
-        // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
-        checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
-        await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)
-        if (checkAgentAssigned == true) {
-          conversationCreated.conversationState = ConversationState.INTERACTIVE
-          conversationCreated.agentPicked = responseAssign.agentId
-          // set room
-          rooms.push(
-            `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
-          )
-        } else {
-          rooms.push(
-            `${message.cloudTenantId}_${message.applicationId}`
-          )
-        }
         conversationCreated.lastMessage = messageDocument['_id']
         conversationCreated.messages.push(messageDocument['_id'])
-        conversationCreated.save()
+
+        await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+
         message['conversation'] = conversationCreated.toObject()
         message['conversationState'] = ConversationState.INTERACTIVE
         message['conversation']['conversationState'] = ConversationState.INTERACTIVE
@@ -199,21 +146,43 @@ export class MessageReceivedEventHandler
     await this.loggingService.debug(MessageReceivedEventHandler, `Message send: ${JSON.stringify(message)}`)
 
     // notify to agent
+    const type = (checkAgentAssigned == true ? NotifyEventType.ASSIGN_CONVERSATION : NotifyEventType.NEW_MESSAGE_NO_READY)
+    
+    await this.notifyToAgent(rooms, type, message)
+
+  }
+
+  private async notifyToAgent(rooms, type, message) {
     await this.commandBus.execute(
       new NotifyNewMessageToAgentCommand(
         ParticipantType.AGENT,
-        this.convertNotifyEventType(checkAgentAssigned),
+        type,
         rooms.join(','),
         {
           message: message,
         },
       ),
     )
-
   }
 
-  private convertNotifyEventType(checkAgentAssigned) {
-    if (checkAgentAssigned == true) return NotifyEventType.ASSIGN_CONVERSATION
-    return NotifyEventType.NEW_MESSAGE
+  private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message) {
+    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId)
+    // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
+    checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
+    await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)
+    if (checkAgentAssigned == true) {
+      conversationDocument.conversationState = ConversationState.INTERACTIVE
+      conversationDocument.agentPicked = responseAssign.agentId
+      // set room
+      rooms.push(
+        `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
+      )
+    } else {
+      rooms.push(
+        `${message.cloudTenantId}_${message.applicationId}`
+      )
+    }
+    conversationDocument.save()
   }
+
 }
