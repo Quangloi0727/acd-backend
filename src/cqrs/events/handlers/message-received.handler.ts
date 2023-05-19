@@ -163,6 +163,7 @@ export class MessageReceivedEventHandler
         },
       ),
     )
+
   }
 
   private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message) {
