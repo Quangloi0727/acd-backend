@@ -22,14 +22,20 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         const { referenceId, cloudAgentId } = body.body
         const findConversation = await this.model.findById(referenceId).lean()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
-        const conversationUpdated = await this.model.findByIdAndUpdate(referenceId, {
-            conversationState: ConversationState.INTERACTIVE
-        }, { new: true }).lean()
+
+        const dataCreateNewConversation: any = findConversation
+        dataCreateNewConversation.startedTime = new Date()
+        dataCreateNewConversation.conversationState = ConversationState.INTERACTIVE
+        delete dataCreateNewConversation.closedTime
+        delete dataCreateNewConversation._id
+
+        const dataCreated: any = await this.model.create(dataCreateNewConversation)
+
         const rooms = [`${cloudAgentId}_${findConversation.cloudTenantId}_${findConversation.applicationId}`]
-        conversationUpdated['referenceId'] = conversationUpdated._id
-        conversationUpdated['agentInitConv'] = cloudAgentId
-        conversationUpdated['agentStartOutbound'] = cloudAgentId
-        conversationUpdated['referenceId'] = conversationUpdated._id
+        dataCreateNewConversation['referenceId'] = dataCreated._id
+        dataCreateNewConversation['agentInitConv'] = cloudAgentId
+        dataCreateNewConversation['agentStartOutbound'] = cloudAgentId
+
         // notify to agent
         await this.commandBus.execute(
             new NotifyNewMessageToAgentCommand(
@@ -37,14 +43,14 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
                 NotifyEventType.NEW_CONVERSATION,
                 rooms.join(','),
                 {
-                    message: conversationUpdated,
+                    message: dataCreateNewConversation,
                 },
             ),
         )
         return {
             statusCode: 200,
             success: true,
-            data: conversationUpdated
+            data: dataCreateNewConversation
         }
     }
 

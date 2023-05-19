@@ -1,15 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { Document } from 'mongoose'
 import { BaseObject } from '../common/base/base-object'
-import { v4 as uuidv4 } from 'uuid'
 
 export type ConversationDocument = Conversation & Document<string>
 
 @Schema({ collection: 'conversation' })
 export class Conversation extends BaseObject<Conversation> {
-  @Prop()
-  tenantId: string
-
   @Prop()
   senderId: string
 

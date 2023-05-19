@@ -22,7 +22,6 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
         const { cloudAgentId, conversationId } = body.body
         const findConversation = await this.model.findById(conversationId).lean()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
-        //if (findConversation.conversationState != ConversationState.OPEN) throw new BadRequestException("Conversation has been received !")
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             conversationState: ConversationState.CLOSE,
             closedTime: new Date()

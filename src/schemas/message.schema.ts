@@ -3,7 +3,6 @@ import mongoose, { Document } from 'mongoose';
 import { BaseObject } from '../common/base/base-object';
 import { MessageDto } from '../message-consumer';
 import { MessageType, ParticipantType } from '../common/enums';
-import { Conversation } from './conversation.schema';
 
 export type MessageDocument = Message & Document;
 export class Attachment {
@@ -33,9 +32,6 @@ export class Message extends BaseObject<Message> {
 
   @Prop()
   cloudTenantId: number;
-
-  @Prop()
-  tenantId: string;
 
   @Prop()
   messageStatus: string;
