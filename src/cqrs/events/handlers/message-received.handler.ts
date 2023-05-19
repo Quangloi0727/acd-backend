@@ -166,11 +166,6 @@ export class MessageReceivedEventHandler
 
   }
 
-  private convertNotifyEventType(checkAgentAssigned) {
-    if (checkAgentAssigned == true) return NotifyEventType.ASSIGN_CONVERSATION
-    return NotifyEventType.NEW_MESSAGE
-  }
-
   private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message) {
     const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
