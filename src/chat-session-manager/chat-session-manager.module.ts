@@ -7,8 +7,7 @@ import {
   ConversationSchema,
 } from '../schemas/conversation.schema';
 import { Message, MessageSchema } from '../schemas/message.schema';
-import { ChatSessionManagerApiController } from './chat-session-manager.controller'
-import { CqrsModule } from '@nestjs/cqrs'
+import { CqrsModule } from '@nestjs/cqrs';
 @Module({
   imports: [
     CqrsModule,
@@ -18,7 +17,6 @@ import { CqrsModule } from '@nestjs/cqrs'
       { name: Message.name, schema: MessageSchema },
     ]),
   ],
-  controllers: [ChatSessionManagerApiController],
   providers: [ChatSessionManagerService],
   exports: [ChatSessionManagerService],
 })

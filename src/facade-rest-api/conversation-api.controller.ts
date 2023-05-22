@@ -35,7 +35,7 @@ import {
 } from './dtos';
 
 @Controller('conversation')
-export class FacadeRestApiController {
+export class ConversationManagerApiController {
   constructor(private queryBus: QueryBus, private commandBus: CommandBus) {}
   @Get('/histories/:id')
   async getConversationHistories(@Param('id') id: string) {

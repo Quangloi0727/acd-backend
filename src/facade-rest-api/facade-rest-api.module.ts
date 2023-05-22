@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { FacadeRestApiController } from './facade-rest-api.controller';
 import { AcdCqrsModule } from '../cqrs/acd-cqrs.module';
+import { MessageManagerApiController } from './message-api.controller';
+import { ConversationManagerApiController } from './conversation-api.controller';
 
 @Module({
   imports: [CqrsModule, AcdCqrsModule],
-  controllers: [FacadeRestApiController],
+  controllers: [ConversationManagerApiController, MessageManagerApiController],
 })
 export class FacadeRestApiModule {}
