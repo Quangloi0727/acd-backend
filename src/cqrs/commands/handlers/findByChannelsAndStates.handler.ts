@@ -4,6 +4,7 @@ import { Model } from "mongoose"
 import { Conversation, ConversationDocument } from "../../../schemas"
 import { FindByChannelsAndStatesCommand } from "../findByChannelsAndStates.command"
 import { LoggingService } from "../../../providers/logging"
+import { ConversationState } from "src/common/enums"
 
 @CommandHandler(FindByChannelsAndStatesCommand)
 export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<FindByChannelsAndStatesCommand>{
@@ -25,7 +26,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
             conversationState: { $in: conversationStates },
         }
 
-        if (cloudAgentId) _query.agentPicked = cloudAgentId
+        if (cloudAgentId && conversationStates.includes(ConversationState.CLOSE) == false) _query.agentPicked = cloudAgentId
 
         const list = this.model.aggregate([
             {
