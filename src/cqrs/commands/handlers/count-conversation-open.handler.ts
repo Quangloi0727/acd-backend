@@ -2,7 +2,7 @@ import { ICommandHandler, CommandHandler, CommandBus } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
 import { ConversationState } from "../../../common/enums"
-import { Conversation, ConversationDocument } from "src/schemas"
+import { Conversation, ConversationDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { CountConversationOpenCommand } from "../count-conversation-open.command"
 

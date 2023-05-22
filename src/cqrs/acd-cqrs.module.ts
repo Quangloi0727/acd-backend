@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { LoggingModule } from '../providers/logging';
 import { ChatSessionManagerModule } from '../chat-session-manager';
 import { ChatSessionRegistryModule } from '../chat-session-registry';
+import { ChatSessionSupervisingModule } from '../chat-session-supervising';
 import {
   Conversation,
   ConversationSchema,
@@ -25,13 +26,16 @@ import {
   FindBySenderCommandHandler,
   CloseConversationCommandHandler,
   CountConversationOpenCommandHandler,
-  ReopenConversationCommandHandler
+  ReopenConversationCommandHandler,
+  JoinConversationCommandHandler,
+  TransferConversationCommandHandler,
+  UnassignConversationCommandHandler,
 } from './commands';
 import { MessageReceivedEventHandler } from './events';
 import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
-  TenantByApplicationQueryHandler
+  TenantByApplicationQueryHandler,
 } from './queries';
 
 const handlers = [
@@ -48,7 +52,10 @@ const handlers = [
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
   CountConversationOpenCommandHandler,
-  ReopenConversationCommandHandler
+  ReopenConversationCommandHandler,
+  JoinConversationCommandHandler,
+  TransferConversationCommandHandler,
+  UnassignConversationCommandHandler,
 ];
 
 @Module({
@@ -67,6 +74,7 @@ const handlers = [
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
+    ChatSessionSupervisingModule,
   ],
   providers: [...handlers],
   exports: [...handlers],

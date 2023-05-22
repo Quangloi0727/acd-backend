@@ -9,3 +9,6 @@ export * from './reopen-conversation.command';
 export * from './findByChannelsAndStates.command';
 export * from './findBySender.command';
 export * from './count-conversation-open.command';
+export * from './join-conversation.command';
+export * from './transfer-conversation.command';
+export * from './unassign-conversation.command';

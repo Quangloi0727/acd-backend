@@ -43,7 +43,7 @@ export class Conversation extends BaseObject<Conversation> {
   closedTime: Date
 
   @Prop()
-  participants: string[]
+  participants: any[]
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message' })
   lastMessage: string

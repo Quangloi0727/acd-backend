@@ -5,7 +5,7 @@ import { Model } from 'mongoose'
 import { ParticipantType } from '../common/enums'
 import { ChannelType, MessageStatus } from '../common/enums'
 import { BadRequestException } from '@nestjs/common/exceptions'
-import { LoggingService } from 'src/providers/logging/logging.service'
+import { LoggingService } from '../providers/logging/logging.service'
 
 @Injectable()
 export class ChatSessionRegistryService {

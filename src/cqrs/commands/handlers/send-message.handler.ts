@@ -1,11 +1,10 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs'
 import { SendMessageCommand } from '../send-message.command'
-import { MessageType } from 'src/facade-rest-api/dtos/send-message.dto'
-import { ChatSessionRegistryService } from 'src/chat-session-registry'
+import { ChatSessionRegistryService } from '../../../chat-session-registry'
 import { BadRequestException } from '@nestjs/common/exceptions'
-import { ChatSessionManagerService } from 'src/chat-session-manager/chat-session-manager.service'
+import { ChatSessionManagerService } from '../../../chat-session-manager/chat-session-manager.service'
 import { NotifyNewMessageToAgentCommand } from '../notify-new-message-to-agent.command'
-import { ChannelType, NotifyEventType, ParticipantType } from 'src/common/enums'
+import { NotifyEventType, ParticipantType, ChannelType } from '../../../common/enums'
 
 interface IResponse {
   statusCode: number,

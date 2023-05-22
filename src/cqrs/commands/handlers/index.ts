@@ -8,3 +8,6 @@ export * from './reopen-conversation.handler';
 export * from './findByChannelsAndStates.handler';
 export * from './findBySender.handler';
 export * from './count-conversation-open.handler';
+export * from './join-conversation.handler';
+export * from './transfer-conversation.handler';
+export * from './unassign-conversation.handler';
