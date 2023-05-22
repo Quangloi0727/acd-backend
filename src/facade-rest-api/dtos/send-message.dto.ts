@@ -37,4 +37,9 @@ export class SendMessageDto {
     @IsOptional()
     @ApiProperty({ format: 'binary', required: false, description: "File upload" })
     attachments: string
+
+    @IsString()
+    @ApiProperty({ required: true })
+    channel: string
+    
 }

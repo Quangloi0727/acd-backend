@@ -9,10 +9,13 @@ import { assignmentClientOptions } from './assignment-client.options'
 import { asmClientOptions } from './asm-client.options'
 import { ZaloConnectorServiceClient, ZALO_CONNECTOR_SERVICE_NAME } from '../../protos/zalo-connector.pb'
 import { zaloConnectorClientOptions } from './zalo-connector-client.options'
+import { FacebookConnectorServiceClient, FACEBOOK_CONNECTOR_SERVICE_NAME } from '../../protos/facebook-connector.pb'
+import { facebookConnectorClientOptions } from './facebook-connector-client.option'
 
 export const AssignmentClient = Symbol('ASSIGNMENT')
 export const AsmClient = Symbol('ASM')
 export const ZaloConnectorClient = Symbol('ZALOCONNECTOR')
+export const FacebookConnectorClient = Symbol('FACEBOOKCONNECTOR')
 
 const assignmentClientFactory = {
   provide: AssignmentClient,
@@ -40,6 +43,14 @@ const zaloConnectorClientFactory = {
   inject: [ZALO_CONNECTOR_SERVICE_NAME],
 }
 
+const facebookConnectorClientFactory = {
+  provide: FacebookConnectorClient,
+  useFactory: (client: ClientGrpc) => {
+    return client.getService<FacebookConnectorServiceClient>(FACEBOOK_CONNECTOR_SERVICE_NAME)
+  },
+  inject: [FACEBOOK_CONNECTOR_SERVICE_NAME],
+}
+
 @Global()
 @Module({
   imports: [
@@ -55,10 +66,15 @@ const zaloConnectorClientFactory = {
       {
         name: ZALO_CONNECTOR_SERVICE_NAME,
         ...zaloConnectorClientOptions,
+      },
+      {
+        name: FACEBOOK_CONNECTOR_SERVICE_NAME,
+        ...facebookConnectorClientOptions,
       }
     ]),
   ],
-  providers: [assignmentClientFactory, asmClientFactory, zaloConnectorClientFactory],
-  exports: [AssignmentClient, AsmClient, ZaloConnectorClient],
+  providers: [assignmentClientFactory, asmClientFactory, zaloConnectorClientFactory, facebookConnectorClientFactory],
+  exports: [AssignmentClient, AsmClient, ZaloConnectorClient, FacebookConnectorClient],
 })
+
 export class GrpcModule { }

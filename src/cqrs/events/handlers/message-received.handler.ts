@@ -34,8 +34,8 @@ export class MessageReceivedEventHandler
   ) { }
 
   async handle(event: MessageReceivedEvent) {
-    await this.loggingService.debug(MessageReceivedEventHandler, `Received a message from zalo connector: ${JSON.stringify(event)}`)
-    await this.loggingService.info(MessageReceivedEventHandler, `Received a message from zalo connector,messageId: ${JSON.stringify(event?.message?.messageId)}`)
+    await this.loggingService.debug(MessageReceivedEventHandler, `Received a message from kafka: ${JSON.stringify(event)}`)
+    await this.loggingService.info(MessageReceivedEventHandler, `Received a message from kafka,messageId: ${JSON.stringify(event?.message?.messageId)}`)
 
     if (!event.message) return
 

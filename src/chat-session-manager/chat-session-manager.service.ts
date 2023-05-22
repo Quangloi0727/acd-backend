@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { AssignmentClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
+import { AssignmentClient, FacebookConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
 import { AgentAssignmentServiceClient } from '../protos/assignment.pb'
 import { Conversation } from '../schemas/conversation.schema'
 import { ConversationState } from '../common/enums'
@@ -7,6 +7,7 @@ import { Message } from '../schemas'
 import { SendMessageCommand } from '../cqrs/commands/send-message.command'
 import { ZaloConnectorServiceClient } from '../protos/zalo-connector.pb'
 import { lastValueFrom } from 'rxjs'
+import { FacebookConnectorServiceClient } from '../protos/facebook-connector.pb'
 
 @Injectable()
 export class ChatSessionManagerService {
@@ -15,6 +16,8 @@ export class ChatSessionManagerService {
     private agentAssignmentServiceClient: AgentAssignmentServiceClient,
     @Inject(ZaloConnectorClient)
     private zaloConnectorService: ZaloConnectorServiceClient,
+    @Inject(FacebookConnectorClient)
+    private facebookConnectorService: FacebookConnectorServiceClient,
   ) { }
 
   async createConversation(message: Message): Promise<Conversation> {
@@ -48,4 +51,9 @@ export class ChatSessionManagerService {
   async requestSendMessageToZaloConnector(command: SendMessageCommand) {
     return lastValueFrom(this.zaloConnectorService.sendMessageToZalo(command))
   }
+
+  async requestSendMessageToFacebookConnector(command: SendMessageCommand) {
+    return lastValueFrom(this.facebookConnectorService.sendMessageToFacebook(command))
+  }
+
 }

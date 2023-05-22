@@ -44,7 +44,7 @@ export class ChatSessionRegistryService {
   async saveMessage(data) {
     await this.loggingService.info(ChatSessionRegistryService, `Data agent send from client to zalo, conversationId: ${JSON.stringify(data.conversationId)}`)
     await this.loggingService.debug(ChatSessionRegistryService, `Data agent send from client to zalo: ${JSON.stringify(data)}`)
-    console.log("Data receive from zalo connector to insert table message: ", data)
+    console.log("Data receive from grpc to insert table message: ", data)
     const { conversationId, cloudAgentId, messageType, text, attachment } = data
     const findInfoConver = await this.model.findOne({ _id: conversationId }).lean()
     if (!findInfoConver) throw new BadRequestException("Not find conversationId !")

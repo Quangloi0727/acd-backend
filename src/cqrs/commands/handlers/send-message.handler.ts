@@ -5,12 +5,12 @@ import { ChatSessionRegistryService } from 'src/chat-session-registry'
 import { BadRequestException } from '@nestjs/common/exceptions'
 import { ChatSessionManagerService } from 'src/chat-session-manager/chat-session-manager.service'
 import { NotifyNewMessageToAgentCommand } from '../notify-new-message-to-agent.command'
-import { NotifyEventType, ParticipantType } from 'src/common/enums'
+import { ChannelType, NotifyEventType, ParticipantType } from 'src/common/enums'
 
 interface IResponse {
   statusCode: number,
   success: boolean,
-  data:any
+  data: any
 }
 
 @CommandHandler(SendMessageCommand)
@@ -24,10 +24,15 @@ export class SendMessageCommandHandler
   ) { }
 
   async execute(command: SendMessageCommand): Promise<IResponse> {
-    const { conversationId } = command.message
+    const { conversationId, channel } = command.message
     const checkChatSession = await this.chatSessionRegistryService.checkChatSessionByConversationId(conversationId)
     if (!checkChatSession) throw new BadRequestException("Not found chat session !")
-    const response = await this.chatSessionManagerService.requestSendMessageToZaloConnector(command)
+    let response: any
+    if (channel == ChannelType.ZL_MESSAGE) {
+      response = await this.chatSessionManagerService.requestSendMessageToZaloConnector(command)
+    } else {
+      response = await this.chatSessionManagerService.requestSendMessageToFacebookConnector(command)
+    }
     const messageCreated = await this.chatSessionRegistryService.saveMessage(response)
     const rooms = [`${response.cloudAgentId}_${response.cloudTenantId}_${messageCreated.applicationId}`]
     //notify to agent
@@ -38,7 +43,7 @@ export class SendMessageCommandHandler
         rooms.join(','),
         {
           message: messageCreated,
-        },
+        }
       )
     )
     return {
@@ -47,7 +52,7 @@ export class SendMessageCommandHandler
       data: {
         "messageType": response.messageType,
         "messageStatus": "SENT",
-        "channel": "ZL_MESSAGE",
+        "channel": channel,
         "receivedTime": new Date(),
         "conversationId": conversationId,
         "attachment": messageCreated.attachment,
