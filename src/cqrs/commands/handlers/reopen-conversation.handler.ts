@@ -27,7 +27,7 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         dataCreateNewConversation.startedTime = new Date()
         dataCreateNewConversation.conversationState = ConversationState.INTERACTIVE
         dataCreateNewConversation.agentPicked = cloudAgentId
-        dataCreateNewConversation.participants = [findConversation.senderId, cloudAgentId]
+        dataCreateNewConversation.participants = [findConversation.senderId, String(cloudAgentId)]
         delete dataCreateNewConversation.closedTime
         delete dataCreateNewConversation._id
 
