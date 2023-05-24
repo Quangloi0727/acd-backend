@@ -27,16 +27,19 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         dataCreateNewConversation.startedTime = new Date()
         dataCreateNewConversation.conversationState = ConversationState.INTERACTIVE
         dataCreateNewConversation.agentPicked = cloudAgentId
-        dataCreateNewConversation.participants = [findConversation.senderId, String(cloudAgentId)]
+        dataCreateNewConversation.referenceId = referenceId
+        dataCreateNewConversation.agentStartOutbound = cloudAgentId
+        dataCreateNewConversation.participants = [findConversation.senderId, cloudAgentId]
+        dataCreateNewConversation.startedBy = ParticipantType.AGENT
         delete dataCreateNewConversation.closedTime
         delete dataCreateNewConversation._id
+        delete dataCreateNewConversation.messages
 
         const dataCreated: any = await this.model.create(dataCreateNewConversation)
 
         const rooms = [`${cloudAgentId}_${findConversation.cloudTenantId}_${findConversation.applicationId}`]
-        dataCreateNewConversation['referenceId'] = dataCreated._id
+        dataCreateNewConversation['conversationId'] = dataCreated._id
         dataCreateNewConversation['agentInitConv'] = cloudAgentId
-        dataCreateNewConversation['agentStartOutbound'] = cloudAgentId
 
         // notify to agent
         await this.commandBus.execute(

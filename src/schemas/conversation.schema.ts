@@ -31,6 +31,12 @@ export class Conversation extends BaseObject<Conversation> {
   agentPicked: number
 
   @Prop()
+  agentStartOutbound: number
+
+  @Prop()
+  startedBy: string
+
+  @Prop()
   lastTime: Date
 
   @Prop()
@@ -47,6 +53,9 @@ export class Conversation extends BaseObject<Conversation> {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message' })
   lastMessage: string
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId})
+  referenceId: string
 
   @Prop({ ref: 'Message' })
   messages: string[]
