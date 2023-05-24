@@ -61,6 +61,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: _query },
+            { $sort: { "lastMessage.receivedTime": -1 } },
             { $skip: skip },
             { $limit: pageSize }
         ])
