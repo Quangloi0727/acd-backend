@@ -29,7 +29,7 @@ export class PickConversationCommandHandler implements ICommandHandler<PickConve
             $push: { participants: String(cloudAgentId) },
             pickConversationTime:new Date()
         }, { new: true }).lean()
-        const rooms = [`${cloudAgentId}_${findConversation.cloudTenantId}_${findConversation.applicationId}`]
+        const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         const data: any = { ...conversationUpdated }
         data.event = NotifyEventType.PICK_CONVERSATION
         data.room = rooms.join(',')

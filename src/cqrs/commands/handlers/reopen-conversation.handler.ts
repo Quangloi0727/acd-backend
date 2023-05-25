@@ -37,7 +37,7 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
 
         const dataCreated: any = await this.model.create(dataCreateNewConversation)
 
-        const rooms = [`${cloudAgentId}_${findConversation.cloudTenantId}_${findConversation.applicationId}`]
+        const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         dataCreateNewConversation['conversationId'] = dataCreated._id
         dataCreateNewConversation['agentInitConv'] = cloudAgentId
 
