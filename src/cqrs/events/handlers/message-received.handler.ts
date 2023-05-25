@@ -74,11 +74,11 @@ export class MessageReceivedEventHandler
       conversationCreated.lastMessage = messageDocument['_id']
       conversationCreated.messages.push(messageDocument['_id'])
 
-      await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+      checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
 
       message['conversation'] = conversationCreated.toObject()
-      message['conversationState'] = ConversationState.INTERACTIVE
-      message['conversation']['conversationState'] = ConversationState.INTERACTIVE
+      message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
+      message['conversation']['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
       message['lastMessage'] = {
         messageType: message.messageType,
         text: message.text
@@ -91,7 +91,9 @@ export class MessageReceivedEventHandler
         conversationDocument.lastTime = new Date()
         conversationDocument.lastMessage = messageDocument['_id']
 
-        await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message)
+
+        rooms = [`${message.cloudTenantId}_${message.applicationId}`]
 
         message['conversation'] = conversationDocument.toObject()
         message['lastMessage'] = {
@@ -130,11 +132,11 @@ export class MessageReceivedEventHandler
         conversationCreated.lastMessage = messageDocument['_id']
         conversationCreated.messages.push(messageDocument['_id'])
 
-        await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
 
         message['conversation'] = conversationCreated.toObject()
-        message['conversationState'] = ConversationState.INTERACTIVE
-        message['conversation']['conversationState'] = ConversationState.INTERACTIVE
+        message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
+        message['conversation']['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
         message['lastMessage'] = {
           messageType: message.messageType,
           text: message.text
@@ -147,7 +149,7 @@ export class MessageReceivedEventHandler
 
     // notify to agent
     const type = (checkAgentAssigned == true ? NotifyEventType.ASSIGN_CONVERSATION : NotifyEventType.NEW_MESSAGE_NO_READY)
-    
+
     await this.notifyToAgent(rooms, type, message)
 
   }
@@ -183,6 +185,7 @@ export class MessageReceivedEventHandler
       )
     }
     conversationDocument.save()
+    return checkAgentAssigned
   }
 
 }
