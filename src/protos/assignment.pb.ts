@@ -7,6 +7,7 @@ export const protobufPackage = "com.metech.acd";
 export interface AssignAgentToConversationRequest {
   tenantId: number;
   conversationId: string;
+  applicationId: string;
 }
 
 export interface AssignAgentToConversationResponse {

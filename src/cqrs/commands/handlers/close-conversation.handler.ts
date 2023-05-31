@@ -1,12 +1,13 @@
 import { ICommandHandler, CommandHandler, CommandBus } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { ConversationState, NotifyEventType, ParticipantType } from "../../../common/enums"
+import { ConversationState, KAFKA_TOPIC_MONITOR, NotifyEventType, ParticipantType } from "../../../common/enums"
 import { Conversation, ConversationDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { NotifyNewMessageToAgentCommand } from "../notify-new-message-to-agent.command"
 import { CloseConversationCommand } from "../close-conversation.command"
-import { BadRequestException } from "@nestjs/common"
+import { BadRequestException, Inject } from "@nestjs/common"
+import { KafkaClientService, KafkaService } from "../../../providers/kafka"
 
 @CommandHandler(CloseConversationCommand)
 export class CloseConversationCommandHandler implements ICommandHandler<CloseConversationCommand>{
@@ -14,7 +15,9 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
         private readonly loggingService: LoggingService,
-        private readonly commandBus: CommandBus
+        private readonly commandBus: CommandBus,
+        @Inject(KafkaClientService)
+        private kafkaService: KafkaService
     ) { }
 
     async execute(body) {
@@ -31,6 +34,10 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
         data.event = NotifyEventType.CLOSE_CONVERSATION
         data.room = rooms.join(',')
         data.conversationId = conversationUpdated._id
+
+        // send kafka event create new conversation
+        await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE)
+
         // notify to agent
         await this.commandBus.execute(
             new NotifyNewMessageToAgentCommand(

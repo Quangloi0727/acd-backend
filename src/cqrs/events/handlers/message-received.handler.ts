@@ -10,6 +10,7 @@ import { ChatSessionManagerService } from '../../../chat-session-manager'
 import { ChatSessionRegistryService } from '../../../chat-session-registry'
 import {
   ConversationState,
+  KAFKA_TOPIC_MONITOR,
   MessageStatus,
   NotifyEventType,
   ParticipantType,
@@ -20,6 +21,8 @@ import {
   TenantByApplicationQuery
 } from '../../../cqrs'
 import { Message, Tenant } from '../../../schemas'
+import { Inject } from '@nestjs/common'
+import { KafkaClientService, KafkaService } from '../../../providers/kafka'
 
 @EventsHandler(MessageReceivedEvent)
 export class MessageReceivedEventHandler
@@ -30,7 +33,9 @@ export class MessageReceivedEventHandler
     private readonly chatSessionManagerService: ChatSessionManagerService,
     private readonly chatSessionRegistryService: ChatSessionRegistryService,
     private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus
+    private readonly queryBus: QueryBus,
+    @Inject(KafkaClientService)
+    private kafkaService: KafkaService
   ) { }
 
   async handle(event: MessageReceivedEvent) {
@@ -83,6 +88,8 @@ export class MessageReceivedEventHandler
         messageType: message.messageType,
         text: message.text
       }
+      // send kafka event create new conversation
+      await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
     } else {
       if (conversationDocument.conversationState == ConversationState.OPEN) {
         message.conversationId = conversationDocument._id
@@ -100,6 +107,8 @@ export class MessageReceivedEventHandler
           messageType: message.messageType,
           text: message.text
         }
+        // send kafka event create new conversation
+        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
       } else if (conversationDocument.conversationState == ConversationState.INTERACTIVE) {
         message.conversationId = conversationDocument._id
         const messageDocument = await this.commandBus.execute<SaveMessageCommand, Message>(new SaveMessageCommand(message))
@@ -117,6 +126,9 @@ export class MessageReceivedEventHandler
         message['conversation']['conversationState'] = ConversationState.INTERACTIVE
         await this.loggingService.info(MessageReceivedEventHandler, `Push to room: ${rooms.join(',')}`)
         await this.loggingService.debug(MessageReceivedEventHandler, `Message send: ${JSON.stringify(message)}`)
+
+        // send kafka event create new conversation
+        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
 
         // notify to agent
         return await this.notifyToAgent(rooms, NotifyEventType.MESSAGE_TRANSFERED, message)
@@ -141,6 +153,9 @@ export class MessageReceivedEventHandler
           messageType: message.messageType,
           text: message.text
         }
+
+        // send kafka event create new conversation
+        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
       }
     }
 
@@ -168,7 +183,8 @@ export class MessageReceivedEventHandler
   }
 
   private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message) {
-    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId)
+    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId)
+    await this.loggingService.debug(MessageReceivedEventHandler, `response from grpc agent assignment is: ${responseAssign.code}, ${responseAssign.message}`)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
     await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)
