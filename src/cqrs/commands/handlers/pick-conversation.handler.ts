@@ -1,18 +1,21 @@
-import { BadRequestException } from "@nestjs/common"
+import { BadRequestException, Inject } from "@nestjs/common"
 import { ICommandHandler, CommandHandler, CommandBus } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { ConversationState, NotifyEventType, ParticipantType } from "../../../common/enums"
+import { ConversationState, KAFKA_TOPIC_MONITOR, NotifyEventType, ParticipantType } from "../../../common/enums"
 import { Conversation, ConversationDocument } from "../../../schemas"
 import { PickConversationCommand } from "../pick-conversation.command"
 import { LoggingService } from "../../../providers/logging"
 import { NotifyNewMessageToAgentCommand } from "../notify-new-message-to-agent.command"
+import { KafkaClientService, KafkaService } from "../../../providers/kafka"
 
 @CommandHandler(PickConversationCommand)
 export class PickConversationCommandHandler implements ICommandHandler<PickConversationCommand>{
     constructor(
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
+        @Inject(KafkaClientService)
+        private kafkaService: KafkaService,
         private readonly loggingService: LoggingService,
         private readonly commandBus: CommandBus
     ) { }
@@ -35,6 +38,10 @@ export class PickConversationCommandHandler implements ICommandHandler<PickConve
         data.room = rooms.join(',')
         data.conversationId = conversationUpdated._id
         data.pickedBy = conversationUpdated.agentPicked
+
+        // send kafka event create new conversation
+        await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_PICK)
+
         // notify to agent
         await this.commandBus.execute(
             new NotifyNewMessageToAgentCommand(

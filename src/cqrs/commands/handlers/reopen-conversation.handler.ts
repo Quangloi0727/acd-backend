@@ -1,12 +1,13 @@
-import { BadRequestException } from "@nestjs/common"
+import { BadRequestException, Inject } from "@nestjs/common"
 import { ICommandHandler, CommandHandler, CommandBus } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { ConversationState, NotifyEventType, ParticipantType } from "../../../common/enums"
+import { ConversationState, KAFKA_TOPIC_MONITOR, NotifyEventType, ParticipantType } from "../../../common/enums"
 import { Conversation, ConversationDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { NotifyNewMessageToAgentCommand } from "../notify-new-message-to-agent.command"
 import { ReopenConversationCommand } from "../reopen-conversation.command"
+import { KafkaClientService, KafkaService } from "src/providers/kafka"
 
 @CommandHandler(ReopenConversationCommand)
 export class ReopenConversationCommandHandler implements ICommandHandler<ReopenConversationCommand>{
@@ -14,7 +15,9 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
         private readonly loggingService: LoggingService,
-        private readonly commandBus: CommandBus
+        private readonly commandBus: CommandBus,
+        @Inject(KafkaClientService)
+        private kafkaService: KafkaService
     ) { }
 
     async execute(body) {
@@ -40,6 +43,9 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         dataCreateNewConversation['conversationId'] = dataCreated._id
         dataCreateNewConversation['agentInitConv'] = cloudAgentId
+
+        // send kafka event create new conversation
+        await this.kafkaService.send(dataCreateNewConversation, KAFKA_TOPIC_MONITOR.CONVERSATION_REOPEN)
 
         // notify to agent
         await this.commandBus.execute(
