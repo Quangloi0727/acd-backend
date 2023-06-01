@@ -17,8 +17,6 @@ export class Participant extends BaseObject<Participant> {
   @Prop()
   participantType: string;
   @Prop()
-  tenantId: string;
-  @Prop()
   cloudTenantId: number;
   @Prop()
   cloudAgentId: number;

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { Conversation, ConversationDocument, Message, MessageDocument, Participant, ParticipantDocument } from '../schemas'
+import { Conversation, ConversationDocument, Message, MessageDocument} from '../schemas'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { ConversationState, ParticipantType } from '../common/enums'
+import { ParticipantType } from '../common/enums'
 import { ChannelType, MessageStatus } from '../common/enums'
 import { BadRequestException } from '@nestjs/common/exceptions'
-import * as moment from 'moment'
+import { LoggingService } from '../providers/logging/logging.service'
 
 @Injectable()
 export class ChatSessionRegistryService {
@@ -14,8 +14,7 @@ export class ChatSessionRegistryService {
     private readonly model: Model<ConversationDocument>,
     @InjectModel(Message.name)
     private readonly messageModel: Model<MessageDocument>,
-    @InjectModel(Participant.name)
-    private readonly participantModel: Model<ParticipantDocument>,
+    private readonly loggingService: LoggingService
   ) { }
   async getConversation(
     applicationId: string,
@@ -26,12 +25,9 @@ export class ChatSessionRegistryService {
         applicationId: applicationId,
         senderId: senderId,
       })
-      .sort('-lastTime')
+      .sort('-_id')
       .exec()
-    return conversation &&
-      conversation.conversationState !== ConversationState.CLOSE
-      ? conversation
-      : null
+    return conversation
   }
 
   async saveConversation(
@@ -46,28 +42,24 @@ export class ChatSessionRegistryService {
   }
 
   async saveMessage(data) {
-    console.log("Data receive from zalo connector to insert table message: ", data)
+    await this.loggingService.info(ChatSessionRegistryService, `Data agent send from client to zalo, conversationId: ${JSON.stringify(data.conversationId)}`)
+    await this.loggingService.debug(ChatSessionRegistryService, `Data agent send from client to zalo: ${JSON.stringify(data)}`)
+    console.log("Data receive from grpc to insert table message: ", data)
     const { conversationId, cloudAgentId, messageType, text, attachment } = data
-    const findInfoMessage = await this.messageModel.findOne({ conversationId: conversationId })
-    const findInfoAgent = await this.participantModel.findOne({ cloudAgentId: cloudAgentId })
-    if (!findInfoMessage) throw new BadRequestException("Not find conversationId !")
+    const findInfoConver = await this.model.findOne({ _id: conversationId }).lean()
+    if (!findInfoConver) throw new BadRequestException("Not find conversationId !")
     const message = new Message({
       channel: ChannelType.ZL_MESSAGE,
       conversationId: conversationId,
       senderId: cloudAgentId,
-      applicationId: findInfoMessage.applicationId,
-      cloudTenantId: findInfoMessage.cloudTenantId,
-      tenantId: findInfoMessage.tenantId,
+      applicationId: findInfoConver.applicationId,
+      cloudTenantId: findInfoConver.cloudTenantId,
       messageStatus: MessageStatus.SENT,
       messageType: messageType,
       messageFrom: ParticipantType.AGENT,
-      sentFrom: cloudAgentId,
-      receivedTime: new Date(),
-      receivedUnixEpoch: moment(new Date()).valueOf(),
-      messageOrder: moment(new Date()).valueOf(),
+      sendFrom: cloudAgentId,
+      receivedTime:new Date(),
       text: text,
-      senderName: findInfoAgent?.fullName || "",
-      socialMessageId: findInfoMessage.socialMessageId,
       attachment: {
         fileName: attachment?.fileName || "",
         directory: '',
@@ -76,7 +68,10 @@ export class ChatSessionRegistryService {
         payload: ''
       }
     })
-    return this.messageModel.create(message)
+    const messageCreated = await this.messageModel.create(message)
+    await this.model.findByIdAndUpdate(conversationId, { $push: { messages: messageCreated['_id'] } })
+    messageCreated['conversationId'] = conversationId
+    return messageCreated
   }
 
 }

@@ -7,15 +7,16 @@ import {
   ConversationSchema,
 } from '../schemas/conversation.schema';
 import { Message, MessageSchema } from '../schemas/message.schema';
+import { CqrsModule } from '@nestjs/cqrs';
 @Module({
   imports: [
+    CqrsModule,
     GrpcModule,
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema },
       { name: Message.name, schema: MessageSchema },
     ]),
   ],
-  controllers: [],
   providers: [ChatSessionManagerService],
   exports: [ChatSessionManagerService],
 })

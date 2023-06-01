@@ -6,6 +6,7 @@ export class MessageDto {
   timestamp: number;
   senderName:string;
   senderId: string;
+  receivedTime: Date;
   applicationId: string;
   channel: ChannelType;
   event: string;
