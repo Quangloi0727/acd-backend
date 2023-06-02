@@ -22,14 +22,14 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
 
     async execute(body) {
         await this.loggingService.debug(CloseConversationCommandHandler, `Data receive is: ${JSON.stringify(body.body)}`)
-        const { cloudAgentId, conversationId } = body.body
+        const { conversationId } = body.body
         const findConversation = await this.model.findById(conversationId).lean()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             conversationState: ConversationState.CLOSE,
             closedTime: new Date()
         }, { new: true }).lean()
-        const rooms = [`${cloudAgentId}_${findConversation.cloudTenantId}_${findConversation.applicationId}`]
+        const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         const data: any = { ...conversationUpdated }
         data.event = NotifyEventType.CLOSE_CONVERSATION
         data.room = rooms.join(',')
