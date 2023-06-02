@@ -195,6 +195,8 @@ export class MessageReceivedEventHandler
       rooms.push(
         `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
       )
+      // case này dành cho trường hợp refresh tab đã đóng ở toàn bộ các agent khi có 1 tin nhắn mới đến mà được phân cho agent đang online
+      await this.notifyToAgent([`${message.cloudTenantId}_${message.applicationId}`], NotifyEventType.MESSAGE_REFRESH_FRONTEND, message)
     } else {
       rooms.push(
         `${message.cloudTenantId}_${message.applicationId}`
