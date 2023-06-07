@@ -44,9 +44,14 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     cloudTenantId: { $last: "$cloudTenantId" },
                     conversationState: { $last: "$conversationState" },
                     lastMessage: { $last: "$lastMessage" },
-                    agentPicked: { $last: "$agentPicked" }
+                    agentPicked: { $last: "$agentPicked" },
+                    startedTime: { $last: "$startedTime" }
                 }
             },
+            { $match: _query },
+            { $skip: skip },
+            { $limit: pageSize },
+            { $sort: { "startedTime": -1 } },
             {
                 $lookup: {
                     from: "message",
@@ -60,10 +65,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     lastMessage: { $arrayElemAt: ["$lastMessage", { $subtract: [{ $size: "$lastMessage" }, 1] }] }
                 }
             },
-            { $match: _query },
-            { $sort: { "lastMessage.receivedTime": -1 } },
-            { $skip: skip },
-            { $limit: pageSize }
+            { $sort: { "lastMessage.receivedTime": -1 } }
         ])
 
         const total = this.model.aggregate([
