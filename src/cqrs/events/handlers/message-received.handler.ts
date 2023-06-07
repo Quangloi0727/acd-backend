@@ -89,7 +89,7 @@ export class MessageReceivedEventHandler
         text: message.text
       }
       // send kafka event create new conversation
-      await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
+      await this.kafkaService.send(message, checkAgentAssigned ? KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN : KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
     } else {
       if (conversationDocument.conversationState == ConversationState.OPEN) {
         message.conversationId = conversationDocument._id
@@ -155,7 +155,7 @@ export class MessageReceivedEventHandler
         }
 
         // send kafka event create new conversation
-        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
+        await this.kafkaService.send(message, checkAgentAssigned ? KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN : KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
       }
     }
 
