@@ -49,9 +49,9 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: _query },
+            { $sort: { "startedTime": -1 } },
             { $skip: skip },
             { $limit: pageSize },
-            { $sort: { "startedTime": -1 } },
             {
                 $lookup: {
                     from: "message",
