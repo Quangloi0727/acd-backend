@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Conversation, ConversationDocument, Message, MessageDocument} from '../schemas'
+import { Conversation, ConversationDocument, Message, MessageDocument } from '../schemas'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { ParticipantType } from '../common/enums'
@@ -58,7 +58,7 @@ export class ChatSessionRegistryService {
       messageType: messageType,
       messageFrom: ParticipantType.AGENT,
       sendFrom: cloudAgentId,
-      receivedTime:new Date(),
+      receivedTime: new Date(),
       text: text,
       attachment: {
         fileName: attachment?.fileName || "",
@@ -69,7 +69,7 @@ export class ChatSessionRegistryService {
       }
     })
     const messageCreated = await this.messageModel.create(message)
-    await this.model.findByIdAndUpdate(conversationId, { $push: { messages: messageCreated['_id'] } })
+    await this.model.findByIdAndUpdate(conversationId, { $push: { messages: messageCreated['_id'] }, lastMessage: messageCreated['_id'] })
     messageCreated['conversationId'] = conversationId
     return messageCreated
   }
