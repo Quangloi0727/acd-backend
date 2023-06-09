@@ -24,7 +24,7 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
             senderId
         }
 
-        const listData = await this.model.find(_query).limit(pageSize).populate({ path: 'messages' }).lean()
+        const listData = await this.model.find(_query).sort({ startedTime: -1 }).limit(pageSize).populate({ path: 'messages' }).lean()
 
         const finalData = listData.map((el: any) => {
             el.conversationId = el._id
