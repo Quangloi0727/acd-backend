@@ -10,5 +10,6 @@ export const enum KAFKA_TOPIC_MONITOR {
   CONVERSATION_ASSIGN = 'ACD.Conversation.Assign',
   CONVERSATION_PICK = 'ACD.Conversation.Pick',
   CONVERSATION_CLOSE = 'ACD.Conversation.Close',
-  CONVERSATION_REOPEN = 'ACD.Conversation.Reopen'
+  CONVERSATION_REOPEN = 'ACD.Conversation.Reopen',
+  CONVERSATION_GENERAL_REPORT = 'ACD.Conversation.General.Report'
 }
