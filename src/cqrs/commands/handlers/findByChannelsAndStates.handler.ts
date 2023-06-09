@@ -55,17 +55,12 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
             {
                 $lookup: {
                     from: "message",
-                    localField: "conversationId",
-                    foreignField: "conversationId",
+                    localField: "lastMessage",
+                    foreignField: "_id",
                     as: "lastMessage"
                 }
             },
-            {
-                $addFields: {
-                    lastMessage: { $arrayElemAt: ["$lastMessage", { $subtract: [{ $size: "$lastMessage" }, 1] }] }
-                }
-            },
-            { $sort: { "lastMessage.receivedTime": -1 } }
+            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } }
         ])
 
         const total = this.model.aggregate([
