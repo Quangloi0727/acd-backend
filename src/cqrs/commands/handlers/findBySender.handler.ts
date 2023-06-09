@@ -4,6 +4,7 @@ import { Model } from "mongoose"
 import { Conversation, ConversationDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { FindBySenderCommand } from "../findBySender.command"
+import { orderBy } from 'lodash'
 
 @CommandHandler(FindBySenderCommand)
 export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderCommand>{
@@ -34,7 +35,7 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
         return {
             statusCode: 200,
             success: true,
-            data: finalData
+            data: orderBy(finalData, ['startedTime'], ['asc'])
         }
     }
 
