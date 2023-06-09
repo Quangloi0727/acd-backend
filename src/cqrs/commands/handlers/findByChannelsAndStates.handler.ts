@@ -60,7 +60,8 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     as: "lastMessage"
                 }
             },
-            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
+            { $sort: { "lastMessage.receivedTime": -1 } }
         ])
 
         const total = this.model.aggregate([
