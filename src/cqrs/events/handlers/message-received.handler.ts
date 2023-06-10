@@ -108,7 +108,7 @@ export class MessageReceivedEventHandler
           text: message.text
         }
         // send kafka event create new conversation
-        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
+        await this.kafkaService.send(message, checkAgentAssigned ? KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN : KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
       } else if (conversationDocument.conversationState == ConversationState.INTERACTIVE) {
         message.conversationId = conversationDocument._id
         const messageDocument = await this.commandBus.execute<SaveMessageCommand, Message>(new SaveMessageCommand(message))
