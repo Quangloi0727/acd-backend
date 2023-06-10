@@ -33,7 +33,8 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $group: {
                     _id: {
                         senderId: "$senderId",
-                        applicationId: "$applicationId"
+                        applicationId: "$applicationId",
+                        conversationState: "$conversationState"
                     },
                     senderName: { $last: "$senderName" },
                     conversationId: { $last: "$_id" },
@@ -69,7 +70,8 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $group: {
                     _id: {
                         senderId: "$senderId",
-                        applicationId: "$applicationId"
+                        applicationId: "$applicationId",
+                        conversationState: "$conversationState"
                     },
                     senderName: { $last: "$senderName" },
                     conversationId: { $last: "$_id" },
@@ -88,7 +90,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $count: "totalCount"
             }
         ])
-
+        
         const [listData, totalData] = await Promise.all([list, total])
 
         return {
