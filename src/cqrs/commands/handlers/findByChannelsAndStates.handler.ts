@@ -33,8 +33,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $group: {
                     _id: {
                         senderId: "$senderId",
-                        applicationId: "$applicationId",
-                        conversationState: "$conversationState"
+                        applicationId: "$applicationId"
                     },
                     senderName: { $last: "$senderName" },
                     conversationId: { $last: "$_id" },
@@ -70,8 +69,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $group: {
                     _id: {
                         senderId: "$senderId",
-                        applicationId: "$applicationId",
-                        conversationState: "$conversationState"
+                        applicationId: "$applicationId"
                     },
                     senderName: { $last: "$senderName" },
                     conversationId: { $last: "$_id" },
