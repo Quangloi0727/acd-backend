@@ -17,7 +17,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
     async execute(body) {
         const data = body.body
         await this.loggingService.debug(FindByChannelsAndStatesCommandHandler, `Data receive is: ${JSON.stringify(data)}`)
-        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize } = data
+        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize, filterText } = data
         const skip = (currentPage - 1) * pageSize
         const _query: any = {
             applicationId: { $in: applicationIds },
@@ -26,9 +26,14 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
             conversationState: { $in: conversationStates },
         }
 
+        if (filterText && filterText != "") {
+            _query.senderName = { $regex: new RegExp(this.stringRegex(filterText), 'i') }
+        }
+
         if (cloudAgentId && conversationStates.includes(ConversationState.CLOSE) == false) _query.agentPicked = cloudAgentId
 
         const list = this.model.aggregate([
+            { $match: _query },
             {
                 $group: {
                     _id: {
@@ -48,7 +53,6 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     startedTime: { $last: "$startedTime" }
                 }
             },
-            { $match: _query },
             { $sort: { "startedTime": -1 } },
             { $skip: skip },
             { $limit: pageSize },
@@ -88,7 +92,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 $count: "totalCount"
             }
         ])
-        
+
         const [listData, totalData] = await Promise.all([list, total])
 
         return {
@@ -101,6 +105,61 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 data: listData
             }
         }
+    }
+
+
+    private stringRegex(text) {
+        let txt = text
+            .toLowerCase()
+            .replace(/^(\s*)|(\s*)$/g, '')
+            .replace(/\s+/g, ' ')
+
+        let ss = ''
+
+        function isValidCharacter(str) {
+            return !/[~`!#$%\^&*+=\-\[\]\\';,/{}()|\\":<>\?]/g.test(str)
+        }
+
+        for (let i = 0; i < txt.length; i++) {
+            ss = isValidCharacter(txt[i]) ? ss.concat(txt[i]) : ss.concat('\\', txt[i])
+        }
+        txt = ss
+
+        const a = 'àáảãạâầấẩẫậăằắẳẵặa'
+        const d = 'đd'
+        const u = 'ùúủũụưừứửữựu'
+        const i = 'ìíỉĩịi'
+        const e = 'èéẻẽẹêềếểễệe'
+        const o = 'òóỏõọôồốổỗộơờớởỡợo'
+        const y = 'ỳýỷỹỵy'
+        let str = ''
+        for (let k = 0; k < txt.length; k++) {
+            if (a.includes(txt[k])) {
+                str = str + '[' + a + ']'
+            }
+            else if (d.includes(txt[k])) {
+                str = str + '[' + d + ']'
+            }
+            else if (u.includes(txt[k])) {
+                str = str + '[' + u + ']'
+            }
+            else if (i.includes(txt[k])) {
+                str = str + '[' + i + ']'
+            }
+            else if (e.includes(txt[k])) {
+                str = str + '[' + e + ']'
+            }
+            else if (o.includes(txt[k])) {
+                str = str + '[' + o + ']'
+            }
+            else if (y.includes(txt[k])) {
+                str = str + '[' + y + ']'
+            }
+            else {
+                str = str + txt[k]
+            }
+        }
+        return str
     }
 
 }

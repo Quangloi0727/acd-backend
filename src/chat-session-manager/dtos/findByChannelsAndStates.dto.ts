@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional } from "class-validator"
+import { IsArray, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class FindByChannelsAndStatesDto {
     @IsArray()
@@ -22,4 +22,8 @@ export class FindByChannelsAndStatesDto {
 
     @IsNumber()
     pageSize: number
+
+    @IsString()
+    @IsOptional()
+    filterText: string
 }
