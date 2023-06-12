@@ -23,15 +23,14 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
 
         const _query: any = {
             applicationId,
-            cloudTenantId,
-            senderId
+            cloudTenantId
         }
 
-        const findConversationLimit = await this.modelMessage.find(_query).sort({ receivedTime: -1 }).limit(pageSize)
+        const findConversationLimit = await this.modelMessage.find({ $and: [_query, { $or: [{ senderId: senderId }, { receivedId: senderId }] }] }).sort({ receivedTime: -1 }).limit(pageSize)
 
         const arrConversationId = _.uniq(_.pluck(findConversationLimit, 'conversationId'), (id) => id.toString())
 
-        const listData = await this.model.find({ _id: { $in: arrConversationId }}).populate({ path: 'messages' }).lean()
+        const listData = await this.model.find({ _id: { $in: arrConversationId } }).populate({ path: 'messages' }).lean()
 
         const finalData = listData.map((el: any) => {
             el.conversationId = el._id

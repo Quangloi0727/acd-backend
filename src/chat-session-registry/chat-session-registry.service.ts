@@ -54,6 +54,7 @@ export class ChatSessionRegistryService {
       senderId: cloudAgentId,
       applicationId: findInfoConver.applicationId,
       cloudTenantId: findInfoConver.cloudTenantId,
+      receivedId: findInfoConver.senderId,
       messageStatus: MessageStatus.SENT,
       messageType: messageType,
       messageFrom: ParticipantType.AGENT,
