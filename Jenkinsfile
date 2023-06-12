@@ -45,6 +45,18 @@ pipeline {
                 build job: 'argocd', parameters: [string(name: 'app_name', value: env.APP_NAME),string(name: 'image_tag', value: env.BUILD_VERSION),string(name: 'branch', value: env.GIT_BRANCH)]
             }
         }
+        stage("Notify to omicx release group") {
+            when {
+                expression {
+                    env.GIT_BRANCH.contains("release")
+                }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'omicx-release-skype-group-id', variable: 'SKYPE_RELEASE_GROUP_ID')]) {
+                    sh 'sendSkypeMessage -u "$SKYPE_ACCOUNT_USR" -p "$SKYPE_ACCOUNT_PSW" -cid "$SKYPE_RELEASE_GROUP_ID" -bs "success" -jn "$JOB_NAME" -bn "$BUILD_NUMBER" -bu "$BUILD_URL" -gu "$GIT_USERNAME" -gcm "$GIT_COMMIT_MSG \n\n\nImage: $IMAGE_NAME - version: $BUILD_VERSION đã build xong!!! <3 <3 "'
+                }
+            }
+        }
     }
     post {
        success {
