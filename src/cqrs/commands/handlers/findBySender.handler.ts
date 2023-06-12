@@ -1,16 +1,18 @@
 import { ICommandHandler, CommandHandler } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { Conversation, ConversationDocument } from "../../../schemas"
+import { Conversation, ConversationDocument, Message, MessageDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { FindBySenderCommand } from "../findBySender.command"
-import { orderBy } from 'lodash'
+import _ from 'underscore'
 
 @CommandHandler(FindBySenderCommand)
 export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderCommand>{
     constructor(
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
+        @InjectModel(Message.name)
+        private readonly modelMessage: Model<MessageDocument>,
         private readonly loggingService: LoggingService
     ) { }
 
@@ -25,7 +27,11 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
             senderId
         }
 
-        const listData = await this.model.find(_query).sort({ startedTime: -1 }).limit(pageSize).populate({ path: 'messages' }).lean()
+        const findConversationLimit = await this.modelMessage.find(_query).sort({ receivedTime: -1 }).limit(pageSize)
+
+        const arrConversationId = _.uniq(_.pluck(findConversationLimit, 'conversationId'), (id) => id.toString())
+
+        const listData = await this.model.find({ _id: { $in: arrConversationId }}).populate({ path: 'messages' }).lean()
 
         const finalData = listData.map((el: any) => {
             el.conversationId = el._id
@@ -35,7 +41,7 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
         return {
             statusCode: 200,
             success: true,
-            data: orderBy(finalData, ['startedTime'], ['asc'])
+            data: finalData
         }
     }
 
