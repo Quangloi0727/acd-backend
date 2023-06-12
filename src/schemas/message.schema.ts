@@ -25,6 +25,9 @@ export class Message extends BaseObject<Message> {
   senderId: string;
 
   @Prop()
+  receivedId: string;
+
+  @Prop()
   applicationId: string;
 
   @Prop()
