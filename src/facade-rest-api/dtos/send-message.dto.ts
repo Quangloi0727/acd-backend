@@ -29,7 +29,7 @@ export class SendMessageDto {
     messageType: string
 
     @IsString()
-    @MaxLength(300)
+    @MaxLength(2000)
     @IsOptional()
     @ApiProperty({ required: false })
     text: string

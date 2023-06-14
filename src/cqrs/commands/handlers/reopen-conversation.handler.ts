@@ -26,6 +26,15 @@ export class ReopenConversationCommandHandler implements ICommandHandler<ReopenC
         const findConversation = await this.model.findById(referenceId).lean()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
 
+        const { applicationId, senderId } = findConversation
+        const findConvertLast = await this.model.findOne({ applicationId, senderId }).sort({ startedTime: -1 }).lean()
+        if (findConversation && findConvertLast.conversationState != ConversationState.CLOSE) {
+            return {
+                success: false,
+                message: "Đã tồn tại 1 conversation khác đang hoạt động !"
+            }
+        }
+
         const dataCreateNewConversation: any = findConversation
         dataCreateNewConversation.startedTime = new Date()
         dataCreateNewConversation.conversationState = ConversationState.INTERACTIVE

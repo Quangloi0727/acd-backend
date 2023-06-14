@@ -1,15 +1,18 @@
 import { ICommandHandler, CommandHandler } from "@nestjs/cqrs"
 import { InjectModel } from "@nestjs/mongoose"
 import { Model } from "mongoose"
-import { Conversation, ConversationDocument } from "../../../schemas"
+import { Conversation, ConversationDocument, Message, MessageDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { FindBySenderCommand } from "../findBySender.command"
+import _ from 'underscore'
 
 @CommandHandler(FindBySenderCommand)
 export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderCommand>{
     constructor(
         @InjectModel(Conversation.name)
         private readonly model: Model<ConversationDocument>,
+        @InjectModel(Message.name)
+        private readonly modelMessage: Model<MessageDocument>,
         private readonly loggingService: LoggingService
     ) { }
 
@@ -20,16 +23,27 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
 
         const _query: any = {
             applicationId,
-            cloudTenantId,
-            senderId
+            cloudTenantId
         }
 
-        const listData = await this.model.find(_query).limit(pageSize).populate({ path: 'messages' }).lean()
+        const findConversationLimit = await this.modelMessage.find({ $and: [_query, { $or: [{ senderId: senderId }, { receivedId: senderId }] }] }).sort({ receivedTime: -1 }).limit(pageSize)
+
+        const arrConversationId = _.uniq(_.pluck(findConversationLimit, 'conversationId'), (id) => id.toString())
+
+        const listData = await this.model.find({ _id: { $in: arrConversationId } }).populate({ path: 'messages' }).lean()
+
+        const findLastConverBySenderIdAndAppId = await this.model.findOne({ $and: [_query, { senderId: senderId }] }).sort({ startedTime: -1 }).lean()
 
         const finalData = listData.map((el: any) => {
             el.conversationId = el._id
             return el
         })
+
+        const lastFinalData = finalData[finalData.length - 1]
+
+        if (lastFinalData._id != findLastConverBySenderIdAndAppId._id) {
+            finalData.push({ ...findLastConverBySenderIdAndAppId, conversationId: findLastConverBySenderIdAndAppId._id })
+        }
 
         return {
             statusCode: 200,
