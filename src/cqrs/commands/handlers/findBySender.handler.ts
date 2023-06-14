@@ -32,10 +32,18 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
 
         const listData = await this.model.find({ _id: { $in: arrConversationId } }).populate({ path: 'messages' }).lean()
 
+        const findLastConverBySenderIdAndAppId = await this.model.findOne({ $and: [_query, { senderId: senderId }] }).sort({ startedTime: -1 }).lean()
+
         const finalData = listData.map((el: any) => {
             el.conversationId = el._id
             return el
         })
+
+        const lastFinalData = finalData[finalData.length - 1]
+
+        if (lastFinalData._id != findLastConverBySenderIdAndAppId._id) {
+            finalData.push({ ...findLastConverBySenderIdAndAppId, conversationId: findLastConverBySenderIdAndAppId._id })
+        }
 
         return {
             statusCode: 200,

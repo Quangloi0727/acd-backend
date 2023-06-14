@@ -1,70 +1,70 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
-import { BaseObject } from '../common/base/base-object';
-import { MessageDto } from '../message-consumer';
-import { MessageType, ParticipantType } from '../common/enums';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import mongoose, { Document } from 'mongoose'
+import { BaseObject } from '../common/base/base-object'
+import { MessageDto } from '../message-consumer'
+import { MessageType, ParticipantType } from '../common/enums'
 
-export type MessageDocument = Message & Document;
+export type MessageDocument = Message & Document
 export class Attachment {
-  fileName: string;
-  directory: string;
-  contentId: string;
-  isAttachment: boolean;
-  payload: string;
+  fileName: string
+  directory: string
+  contentId: string
+  isAttachment: boolean
+  payload: string
 }
 
 @Schema({ collection: 'message' })
 export class Message extends BaseObject<Message> {
   @Prop()
-  channel: string;
+  channel: string
 
-  @Prop({  type: mongoose.Schema.Types.ObjectId ,ref:'Conversation'})
-  conversationId: string;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', index: true })
+  conversationId: string
 
-  @Prop()
-  senderId: string;
+  @Prop({ index: true })
+  senderId: string
 
-  @Prop()
-  receivedId: string;
+  @Prop({ index: true })
+  receivedId: string
 
-  @Prop()
-  applicationId: string;
-
-  @Prop()
-  applicationName: string;
+  @Prop({ index: true })
+  applicationId: string
 
   @Prop()
-  cloudTenantId: number;
+  applicationName: string
+
+  @Prop({ index: true })
+  cloudTenantId: number
 
   @Prop()
-  messageStatus: string;
-  
-  @Prop()
-  messageType: string;
+  messageStatus: string
 
   @Prop()
-  messageFrom: string;
+  messageType: string
 
   @Prop()
-  sendFrom: string;
+  messageFrom: string
 
   @Prop()
-  text: string;
+  sendFrom: string
 
   @Prop()
-  senderName: string;
+  text: string
 
   @Prop()
-  socialMessageId: string;
+  senderName: string
 
   @Prop()
-  attachment: Attachment;
+  socialMessageId: string
 
   @Prop()
-  messageResponse: string;
+  attachment: Attachment
 
   @Prop()
-  receivedTime: Date;
+  messageResponse: string
+
+  @Prop({ index: true })
+  receivedTime: Date
 
   static fromDto(dto: MessageDto) {
     return new Message({
@@ -82,8 +82,8 @@ export class Message extends BaseObject<Message> {
             ? MessageType.IMAGE
             : MessageType.FILE
           : MessageType.TEXT,
-    });
+    })
   }
 }
 
-export const MessageSchema = SchemaFactory.createForClass(Message);
+export const MessageSchema = SchemaFactory.createForClass(Message)
