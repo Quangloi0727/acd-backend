@@ -6,28 +6,28 @@ export type ConversationDocument = Conversation & Document<string>
 
 @Schema({ collection: 'conversation' })
 export class Conversation extends BaseObject<Conversation> {
-  @Prop()
+  @Prop({ index: true })
   senderId: string
 
-  @Prop()
+  @Prop({ index: true })
   senderName: string
 
   @Prop()
   applicationName: string
 
-  @Prop()
+  @Prop({ index: true })
   applicationId: string
 
-  @Prop()
+  @Prop({ index: true })
   cloudTenantId: number
 
   @Prop()
   channel: string
 
-  @Prop()
+  @Prop({ index: true })
   conversationState: string
 
-  @Prop()
+  @Prop({ index: true })
   agentPicked: number
 
   @Prop()
@@ -39,7 +39,7 @@ export class Conversation extends BaseObject<Conversation> {
   @Prop()
   lastTime: Date
 
-  @Prop()
+  @Prop({ index: true })
   startedTime: Date
 
   @Prop()
@@ -48,16 +48,16 @@ export class Conversation extends BaseObject<Conversation> {
   @Prop()
   closedTime: Date
 
-  @Prop()
+  @Prop({ index: true })
   participants: any[]
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message', index: true })
   lastMessage: string
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId})
+  @Prop({ type: mongoose.Schema.Types.ObjectId })
   referenceId: string
 
-  @Prop({ ref: 'Message' })
+  @Prop({ ref: 'Message', index: true })
   messages: string[]
 }
 
