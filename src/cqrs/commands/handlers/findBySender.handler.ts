@@ -41,7 +41,7 @@ export class FindBySenderCommandHandler implements ICommandHandler<FindBySenderC
 
         const lastFinalData = finalData[finalData.length - 1]
 
-        if (lastFinalData._id != findLastConverBySenderIdAndAppId._id) {
+        if (lastFinalData._id.toString() != findLastConverBySenderIdAndAppId._id.toString()) {
             finalData.push({ ...findLastConverBySenderIdAndAppId, conversationId: findLastConverBySenderIdAndAppId._id })
         }
 
