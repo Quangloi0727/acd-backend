@@ -119,9 +119,11 @@ export class MessageReceivedEventHandler
         conversationDocument.lastMessage = messageDocument['_id']
         conversationDocument.save()
         // set room
-        rooms.push(
-          `${conversationDocument.agentPicked}_${message.cloudTenantId}_${message.applicationId}`,
-        )
+        for (const item of conversationDocument.participants){
+          rooms.push(
+            `${item}_${message.cloudTenantId}_${message.applicationId}`,
+          )
+        }
         message['messageId'] = messageDocument['_id']
         message['conversationState'] = ConversationState.INTERACTIVE
         message['conversation'] = {}
