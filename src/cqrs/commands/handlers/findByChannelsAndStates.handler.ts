@@ -29,7 +29,10 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
             _query.senderName = { $regex: new RegExp(this.stringRegex(filterText), 'i') }
         }
 
-        if (cloudAgentId && conversationStates.includes(ConversationState.CLOSE) == false) _query.agentPicked = cloudAgentId
+        if (cloudAgentId && conversationStates.includes(ConversationState.CLOSE) == false) {
+            _query.$or = []
+            _query.$or.push({ participants: cloudAgentId }, { agentPicked: cloudAgentId })
+        }
 
         const list = this.model.aggregate([
             { $match: _query },
@@ -49,7 +52,8 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     conversationState: { $last: "$conversationState" },
                     lastMessage: { $last: "$lastMessage" },
                     agentPicked: { $last: "$agentPicked" },
-                    startedTime: { $last: "$startedTime" }
+                    startedTime: { $last: "$startedTime" },
+                    participants: { $last: "$participants" }
                 }
             },
             { $match: { conversationState: { $in: conversationStates } } },
