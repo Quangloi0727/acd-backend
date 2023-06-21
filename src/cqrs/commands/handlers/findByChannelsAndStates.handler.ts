@@ -36,6 +36,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
 
         const list = this.model.aggregate([
             { $match: _query },
+            { $sort: { startedTime: 1 } },
             {
                 $group: {
                     _id: {
@@ -57,7 +58,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: { conversationState: { $in: conversationStates } } },
-            { $sort: { "startedTime": -1 } },
+            { $sort: { startedTime: -1 } },
             { $skip: skip },
             { $limit: pageSize },
             {
@@ -74,6 +75,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
 
         const total = this.model.aggregate([
             { $match: _query },
+            { $sort: { startedTime: 1 } },
             {
                 $group: {
                     _id: {
