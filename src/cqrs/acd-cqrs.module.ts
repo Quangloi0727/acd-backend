@@ -45,6 +45,9 @@ import {
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
 } from './queries';
+import { EmailSessionManagerModule } from 'src/email-session-manager';
+import { EmailSessionRegistryModule } from 'src/email-session-registry';
+import { EmailSessionSupervisingModule } from 'src/email-session-supervising';
 
 const handlers = [
   SaveMessageCommandHandler,
@@ -88,6 +91,9 @@ const handlers = [
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
     ChatSessionSupervisingModule,
+    EmailSessionManagerModule,
+    EmailSessionRegistryModule,
+    EmailSessionSupervisingModule,
   ],
   providers: [...handlers],
   exports: [...handlers],

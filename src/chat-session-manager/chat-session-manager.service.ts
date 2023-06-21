@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { AssignmentClient, FacebookConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
 import { AgentAssignmentServiceClient } from '../protos/assignment.pb'
 import { Conversation } from '../schemas/conversation.schema'
-import { ConversationState } from '../common/enums'
+import { ConversationState, ConversationType } from '../common/enums'
 import { Message } from '../schemas'
 import { SendMessageCommand } from '../cqrs/commands/send-message.command'
 import { ZaloConnectorServiceClient } from '../protos/zalo-connector.pb'
@@ -41,7 +41,8 @@ export class ChatSessionManagerService {
         this.agentAssignmentServiceClient.assignAgentToConversation({
           conversationId: conversationId,
           tenantId: tenantId,
-          applicationId: applicationId
+          applicationId: applicationId,
+          type: ConversationType.CHAT,
         }))
       return availableAgentId
     } catch (error) {

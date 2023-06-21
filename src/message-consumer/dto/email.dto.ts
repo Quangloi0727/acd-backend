@@ -14,6 +14,7 @@ export interface EmailDto {
   to: string;
   cc?: string;
   bcc?: string;
+  tenantId?: number;
   ctime?: number;
   subject?: string;
   html?: string;

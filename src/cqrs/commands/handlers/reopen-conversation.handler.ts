@@ -7,7 +7,7 @@ import { Conversation, ConversationDocument } from "../../../schemas"
 import { LoggingService } from "../../../providers/logging"
 import { NotifyNewMessageToAgentCommand } from "../notify-new-message-to-agent.command"
 import { ReopenConversationCommand } from "../reopen-conversation.command"
-import { KafkaClientService, KafkaService } from "src/providers/kafka"
+import { KafkaClientService, KafkaService } from "../../../providers/kafka"
 
 @CommandHandler(ReopenConversationCommand)
 export class ReopenConversationCommandHandler implements ICommandHandler<ReopenConversationCommand>{

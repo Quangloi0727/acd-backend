@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { Attachment, EmailDto } from '../message-consumer';
 import { BaseObject } from '../common/base/base-object';
 
@@ -9,6 +9,12 @@ export type EmailDocument = Email & Document;
 export class Email extends BaseObject<Email> {
   @Prop()
   CreationTime: Date;
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EmailConversation',
+    index: true,
+  })
+  conversationId: string;
   @Prop()
   LastModificationTime: Date;
   @Prop({ default: false })
@@ -17,24 +23,20 @@ export class Email extends BaseObject<Email> {
   DeletionTime: Date;
   @Prop()
   TenantId: number;
-  @Prop({ length: 255 })
+  @Prop()
   Subject: string;
-  @Prop({ length: 255 })
+  @Prop()
   FromEmail: string;
-  @Prop({ length: 255 })
+  @Prop()
   ToEmail: string;
-  @Prop({ length: 255 })
+  @Prop()
   CcEmail: string;
-  @Prop({ length: 255 })
+  @Prop()
   BccEmail: string;
   @Prop()
   Content: string;
   @Prop({ length: 50 })
   Status: string;
-  @Prop()
-  AgentId: number;
-  @Prop()
-  AssignedDate: Date;
   @Prop()
   ReceivedTime: Date;
   @Prop()
@@ -61,12 +63,15 @@ export class Email extends BaseObject<Email> {
   static fromDto(dto: EmailDto) {
     return new Email({
       CreationTime: new Date(),
-      Subject: dto.subject,
+      Subject: dto.subject
+        ? dto.subject.replace('Re: ', '').replace('Re:', '')
+        : undefined,
       SenderName: this.getEmailName(dto.from),
       FromEmail: this.checkAndParseEmailAddress(dto.from),
       ToEmail: this.checkAndParseEmailAddress(dto.to),
       CcEmail: this.checkAndParseEmailAddress(dto.cc),
       BccEmail: this.checkAndParseEmailAddress(dto.bcc),
+      TenantId: dto.tenantId,
       Content: dto.html,
       ReceivedTime: new Date((dto.ctime ?? 0) * 1000),
       attachments: dto.attachments,

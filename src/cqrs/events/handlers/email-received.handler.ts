@@ -6,25 +6,13 @@ import {
 } from '@nestjs/cqrs';
 import { MessageReceivedEvent } from '../message-received.event';
 import { LoggingService } from '../../../providers/logging';
-import { ChatSessionManagerService } from '../../../chat-session-manager';
-import { ChatSessionRegistryService } from '../../../chat-session-registry';
-import {
-  ConversationState,
-  KAFKA_TOPIC_MONITOR,
-  MessageStatus,
-  NotifyEventType,
-  ParticipantType,
-} from '../../../common/enums';
-import {
-  NotifyNewMessageToAgentCommand,
-  SaveEmailCommand,
-  SaveMessageCommand,
-  TenantByApplicationQuery,
-} from '../..';
-import { Email, Message, Tenant } from '../../../schemas';
+import { SaveEmailCommand } from '../..';
+import { Email, EmailConversationDocument } from '../../../schemas';
 import { Inject } from '@nestjs/common';
 import { KafkaClientService, KafkaService } from '../../../providers/kafka';
 import { EmailReceivedEvent } from '../email-received.event';
+import { EmailSessionManagerService } from '../../../email-session-manager';
+import { EmailSessionRegistryService } from '../../../email-session-registry';
 
 @EventsHandler(EmailReceivedEvent)
 export class EmailReceivedEventHandler
@@ -32,8 +20,8 @@ export class EmailReceivedEventHandler
 {
   constructor(
     private readonly loggingService: LoggingService,
-    private readonly chatSessionManagerService: ChatSessionManagerService,
-    private readonly chatSessionRegistryService: ChatSessionRegistryService,
+    private readonly emailSessionManagerService: EmailSessionManagerService,
+    private readonly emailSessionRegistryService: EmailSessionRegistryService,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     @Inject(KafkaClientService)
@@ -41,32 +29,54 @@ export class EmailReceivedEventHandler
   ) {}
 
   async handle(event: EmailReceivedEvent) {
-    await this.loggingService.debug(
+    const email = Email.fromDto(event.email);
+    this.loggingService.debug(
       EmailReceivedEventHandler,
-      `Received a email from kafka: ${JSON.stringify(event)}`,
+      `Received a email: ${JSON.stringify(email)}`,
     );
 
     // parse subject to get conversation id
-    const subject = event.email.subject;
-    if (subject) {
+    const conversationId =
+      this.emailSessionRegistryService.getConversationIdFromSubject(
+        email.Subject,
+      );
+
+    let conversation: EmailConversationDocument = null;
+    // find conversation by id
+    if (conversationId) {
+      conversation =
+        await this.emailSessionRegistryService.getEmailConversationById(
+          conversationId,
+        );
     }
 
-    const email = await this.commandBus.execute(
-      new SaveEmailCommand(Email.fromDto(event.email)),
-    );
-    this.loggingService.debug(
-      EmailReceivedEventHandler,
-      `email: ${JSON.stringify(email)}`,
-    );
-    // find conversation by id
-
     // if not exist conversation -> create new conversations and create subject with conversationid tag
+    if (!conversation) {
+      conversation =
+        await this.emailSessionManagerService.createEmailConversation(email);
+      email.Subject = `#${String(conversation._id).toUpperCase()} - ${
+        email.Subject
+      }`;
+      conversation.Subject = email.Subject;
+      conversation.save();
+      // Assign agent for email
+      const conversationAssigned =
+        await this.emailSessionRegistryService.assignAgentToSession(
+          conversation._id,
+          conversation.FromEmail,
+          conversation.TenantId,
+        );
+      await this.loggingService.debug(
+        EmailReceivedEventHandler,
+        `response from grpc agent assignment is: ${JSON.stringify(
+          conversationAssigned,
+        )}`,
+      );
+    }
 
-    // else set conversation for email
-
+    email.conversationId = conversation._id;
     // save email
-
-    // Request assign agent for email
+    await this.commandBus.execute(new SaveEmailCommand(email));
 
     // notify to agent
   }

@@ -1,7 +1,7 @@
 export const enum KAFKA_TOPIC {
   CONNECTOR_MESSAGE_RECEIVED = 'ACD.Message.Received',
   NOTIFY_NEW_MESSAGE = 'test',
-  NEW_EMAIL_RECEIVED = 'ACD.Email.NewEmail',
+  NEW_EMAIL_RECEIVED = 'test',
 }
 
 export const enum KAFKA_TOPIC_MONITOR {
