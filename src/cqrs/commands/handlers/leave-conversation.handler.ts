@@ -1,13 +1,13 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UnassignConversationCommand } from '../unassign-conversation.command';
+import { LeaveConversationCommand } from '../leave-conversation.command';
 import { LoggingService } from '../../../providers/logging';
 import { NotifyEventType, ParticipantType } from '../../../common/enums';
 import { NotifyNewMessageToAgentCommand } from '../notify-new-message-to-agent.command';
 import { ChatSessionSupervisingService } from '../../../chat-session-supervising';
 
-@CommandHandler(UnassignConversationCommand)
-export class UnassignConversationCommandHandler
-  implements ICommandHandler<UnassignConversationCommand, any>
+@CommandHandler(LeaveConversationCommand)
+export class LeaveConversationCommandHandler
+  implements ICommandHandler<LeaveConversationCommand, any>
 {
   constructor(
     private readonly chatSessionSupervisingService: ChatSessionSupervisingService,
@@ -15,26 +15,23 @@ export class UnassignConversationCommandHandler
     private readonly commandBus: CommandBus,
   ) {}
 
-  async execute(command: UnassignConversationCommand): Promise<any> {
+  async execute(command: LeaveConversationCommand): Promise<any> {
     await this.loggingService.debug(
-      UnassignConversationCommandHandler,
-      `UnassignConversationCommandHandler request: ${JSON.stringify(
+      LeaveConversationCommandHandler,
+      `LeaveConversationCommandHandler request: ${JSON.stringify(
         command.request,
       )}`,
     );
     const conversation =
-      await this.chatSessionSupervisingService.unassignConversation(
+      await this.chatSessionSupervisingService.leaveConversation(
         command.request.conversationId,
-        // command.request.currentAgentId,
+        command.request.currentAgentId,
       );
-    const rooms = [];
-    conversation.participants.forEach((p) =>
-      rooms.push(
-        `${p}_${conversation.cloudTenantId}_${conversation.applicationId}`,
-      ),
-    );
+    const rooms = [
+      `${command.request.currentAgentId}_${conversation.cloudTenantId}_${conversation.applicationId}`,
+    ];
     const data: any = { ...conversation };
-    data.event = NotifyEventType.UNASSIGN_CONVERSATION;
+    data.event = NotifyEventType.LEAVE_CONVERSATION;
     data.room = rooms.join(',');
     data.conversationId = command.request.conversationId;
     data.pickedBy = conversation.agentPicked;
@@ -42,7 +39,7 @@ export class UnassignConversationCommandHandler
     await this.commandBus.execute(
       new NotifyNewMessageToAgentCommand(
         ParticipantType.AGENT,
-        NotifyEventType.UNASSIGN_CONVERSATION,
+        NotifyEventType.LEAVE_CONVERSATION,
         rooms.join(','),
         data,
       ),

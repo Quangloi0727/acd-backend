@@ -1,9 +1,9 @@
 import { IsNumber, IsString } from 'class-validator';
 
-export class UnassignConversationDto {
+export class LeaveConversationDto {
   @IsString()
   conversationId: string;
 
-  // @IsNumber()
-  // currentAgentId: number;
+  @IsNumber()
+  currentAgentId: number;
 }

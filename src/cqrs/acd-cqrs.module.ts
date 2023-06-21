@@ -9,6 +9,8 @@ import { ChatSessionSupervisingModule } from '../chat-session-supervising';
 import {
   Conversation,
   ConversationSchema,
+  Email,
+  EmailSchema,
   Message,
   MessageSchema,
   Participant,
@@ -30,8 +32,14 @@ import {
   JoinConversationCommandHandler,
   TransferConversationCommandHandler,
   UnassignConversationCommandHandler,
+  LeaveConversationCommandHandler,
+  SendEmailCommandHandler,
+  SaveEmailCommandHandler,
 } from './commands';
-import { MessageReceivedEventHandler } from './events';
+import {
+  EmailReceivedEventHandler,
+  MessageReceivedEventHandler,
+} from './events';
 import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
@@ -56,6 +64,10 @@ const handlers = [
   JoinConversationCommandHandler,
   TransferConversationCommandHandler,
   UnassignConversationCommandHandler,
+  LeaveConversationCommandHandler,
+  EmailReceivedEventHandler,
+  SendEmailCommandHandler,
+  SaveEmailCommandHandler,
 ];
 
 @Module({
@@ -71,6 +83,7 @@ const handlers = [
       { name: Conversation.name, schema: ConversationSchema },
       { name: Tenant.name, schema: TenantSchema },
       { name: Participant.name, schema: ParticipantSchema },
+      { name: Email.name, schema: EmailSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,

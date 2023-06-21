@@ -41,6 +41,37 @@ export class ChatSessionSupervisingService {
 
   async unassignConversation(
     conversationId: string,
+    // agentId: number,
+  ): Promise<Conversation> {
+    const conversation = await this.model.findById(conversationId).lean();
+    if (!conversation) throw new BadRequestException('conversation not found!');
+    if (conversation.conversationState != ConversationState.INTERACTIVE)
+      throw new BadRequestException(
+        'Conversation has not in interactive status!',
+      );
+
+    // const indexOf = conversation.participants.indexOf(agentId.toString());
+    // if (indexOf < 0)
+    //   throw new BadRequestException('Conversation has not handled by agent!');
+
+    // conversation.participants.splice(indexOf, 1);
+    await this.model
+      .findByIdAndUpdate(
+        conversationId,
+        {
+          conversationState: ConversationState.OPEN,
+          agentPicked: null,
+          pickConversationTime: null,
+          $set: { participants: [conversation.senderId] },
+        },
+        { new: true },
+      )
+      .lean();
+    return conversation;
+  }
+
+  async leaveConversation(
+    conversationId: string,
     agentId: number,
   ): Promise<Conversation> {
     const conversation = await this.model.findById(conversationId).lean();
@@ -59,9 +90,6 @@ export class ChatSessionSupervisingService {
       .findByIdAndUpdate(
         conversationId,
         {
-          conversationState: ConversationState.OPEN,
-          agentPicked: null,
-          pickConversationTime: null,
           $set: { participants: conversation.participants },
         },
         { new: true },

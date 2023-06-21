@@ -22,6 +22,7 @@ import {
   UnassignConversationCommand,
   TransferConversationCommand,
   JoinConversationCommand,
+  LeaveConversationCommand,
 } from '../cqrs';
 import {
   SendMessageDto,
@@ -32,6 +33,7 @@ import {
   UnassignConversationDto,
   TransferConversationDto,
   JoinConversationDto,
+  LeaveConversationDto,
 } from './dtos';
 
 @Controller('conversation')
@@ -107,5 +109,10 @@ export class ConversationManagerApiController {
   @Post('/join')
   async joinConversation(@Body() request: JoinConversationDto) {
     return await this.commandBus.execute(new JoinConversationCommand(request));
+  }
+
+  @Post('/leave')
+  async leaveConversation(@Body() request: LeaveConversationDto) {
+    return await this.commandBus.execute(new LeaveConversationCommand(request));
   }
 }

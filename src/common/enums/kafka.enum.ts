@@ -1,6 +1,7 @@
 export const enum KAFKA_TOPIC {
-  CONNECTOR_MESSAGE_RECEIVED = 'ACD.Message.Received',
+  CONNECTOR_MESSAGE_RECEIVED = 'ACD.Message.Received.Local',
   NOTIFY_NEW_MESSAGE = 'test',
+  NEW_EMAIL_RECEIVED = 'ACD.Email.NewEmail',
 }
 
 export const enum KAFKA_TOPIC_MONITOR {
@@ -11,5 +12,5 @@ export const enum KAFKA_TOPIC_MONITOR {
   CONVERSATION_PICK = 'ACD.Conversation.Pick',
   CONVERSATION_CLOSE = 'ACD.Conversation.Close',
   CONVERSATION_REOPEN = 'ACD.Conversation.Reopen',
-  CONVERSATION_GENERAL_REPORT = 'ACD.Conversation.General.Report'
+  CONVERSATION_GENERAL_REPORT = 'ACD.Conversation.General.Report',
 }

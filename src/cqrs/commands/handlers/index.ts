@@ -11,3 +11,6 @@ export * from './count-conversation-open.handler';
 export * from './join-conversation.handler';
 export * from './transfer-conversation.handler';
 export * from './unassign-conversation.handler';
+export * from './leave-conversation.handler';
+export * from './send-email.handler';
+export * from './save-email.handler';
