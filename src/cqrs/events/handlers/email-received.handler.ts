@@ -54,16 +54,13 @@ export class EmailReceivedEventHandler
     if (!conversation) {
       conversation =
         await this.emailSessionManagerService.createEmailConversation(email);
-      email.Subject = `#${String(conversation._id).toUpperCase()} - ${
-        email.Subject
-      }`;
       conversation.Subject = email.Subject;
       conversation.save();
       // Assign agent for email
       const conversationAssigned =
         await this.emailSessionRegistryService.assignAgentToSession(
           conversation._id,
-          conversation.FromEmail,
+          conversation.ToEmail,
           conversation.TenantId,
         );
       await this.loggingService.debug(

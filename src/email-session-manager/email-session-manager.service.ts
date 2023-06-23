@@ -18,6 +18,7 @@ export class EmailSessionManagerService {
   ): Promise<EmailConversationDocument> {
     return this.model.create({
       CreationTime: new Date(),
+      ReceivedTime: email.ReceivedTime,
       SenderName: email.SenderName,
       TenantId: email.TenantId,
       FromEmail: email.FromEmail,

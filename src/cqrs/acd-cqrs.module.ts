@@ -10,6 +10,8 @@ import {
   Conversation,
   ConversationSchema,
   Email,
+  EmailConversation,
+  EmailConversationSchema,
   EmailSchema,
   Message,
   MessageSchema,
@@ -35,6 +37,12 @@ import {
   LeaveConversationCommandHandler,
   SendEmailCommandHandler,
   SaveEmailCommandHandler,
+  GetEmailConversationsCommandHandler,
+  CountEmailConversationCommandHandler,
+  GetEmailDetailCommandHandler,
+  MarkEmailAsReadCommandHandler,
+  MarkEmailAsSpamCommandHandler,
+  MarkEmailAsUnreadCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -71,6 +79,12 @@ const handlers = [
   EmailReceivedEventHandler,
   SendEmailCommandHandler,
   SaveEmailCommandHandler,
+  GetEmailConversationsCommandHandler,
+  CountEmailConversationCommandHandler,
+  GetEmailDetailCommandHandler,
+  MarkEmailAsReadCommandHandler,
+  MarkEmailAsSpamCommandHandler,
+  MarkEmailAsUnreadCommandHandler,
 ];
 
 @Module({
@@ -87,6 +101,7 @@ const handlers = [
       { name: Tenant.name, schema: TenantSchema },
       { name: Participant.name, schema: ParticipantSchema },
       { name: Email.name, schema: EmailSchema },
+      { name: EmailConversation.name, schema: EmailConversationSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,

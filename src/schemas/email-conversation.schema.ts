@@ -17,6 +17,8 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   @Prop()
   Subject: string;
   @Prop()
+  ReceivedTime: Date;
+  @Prop()
   FromEmail: string;
   @Prop()
   ToEmail: string;
@@ -28,6 +30,8 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   participants: string[];
   @Prop({ default: false })
   SpamMarked: boolean;
+  @Prop({ default: false })
+  Readed: boolean;
   @Prop()
   EmailChannelId: string;
   @Prop()
@@ -35,7 +39,7 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   @Prop()
   Reader: number;
   @Prop()
-  ReadTime: Date;
+  ReadedTime: Date;
   @Prop()
   SenderName: string;
   @Prop()

@@ -41,12 +41,8 @@ export class Email extends BaseObject<Email> {
   ReceivedTime: Date;
   @Prop()
   RelatedEmailId: string;
-  @Prop({ default: false })
-  SpamMarked: boolean;
   @Prop({ default: 'inbound' })
   Direction: string;
-  @Prop()
-  EmailChannelId: string;
   @Prop()
   SlaStatus: boolean;
   @Prop()
