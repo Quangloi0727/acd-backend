@@ -6,13 +6,17 @@ export const protobufPackage = "com.metech.acd";
 
 export interface GetAvailableAgentsRequest {
   tenantId: number;
-  conversationId: string;
+  agentIds: number[];
 }
 
 export interface GetAvailableAgentsResponse {
+  data: FormatMessageResponse[];
+}
+
+export interface FormatMessageResponse {
   tenantId: number;
-  conversationId: string;
-  agentId: string;
+  agentId: number;
+  changeTime: number;
 }
 
 export const COM_METECH_ACD_PACKAGE_NAME = "com.metech.acd";

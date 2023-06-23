@@ -39,11 +39,14 @@ export class SendMessageCommandHandler
         response = await this.chatSessionManagerService.requestSendMessageToFacebookConnector(command)
       }
       const messageCreated = await this.chatSessionRegistryService.saveMessage(response)
-      const rooms = [`${response.cloudAgentId}_${response.cloudTenantId}_${messageCreated.applicationId}`]
 
+      let rooms = []
+      for (const item of checkChatSession.participants) {
+        rooms.push(`${item}_${response.cloudTenantId}_${messageCreated.applicationId}`)
+      }
       // send kafka event create new conversation
       await this.kafkaService.send(messageCreated, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_SEND)
-      
+
       //notify to agent
       await this.commandBus.execute(
         new NotifyNewMessageToAgentCommand(

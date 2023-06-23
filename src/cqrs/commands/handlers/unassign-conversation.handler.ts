@@ -25,11 +25,14 @@ export class UnassignConversationCommandHandler
     const conversation =
       await this.chatSessionSupervisingService.unassignConversation(
         command.request.conversationId,
-        command.request.currentAgentId,
+        // command.request.currentAgentId,
       );
-    const rooms = [
-      `${command.request.currentAgentId}_${conversation.cloudTenantId}_${conversation.applicationId}`,
-    ];
+    const rooms = [];
+    conversation.participants.forEach((p) =>
+      rooms.push(
+        `${p}_${conversation.cloudTenantId}_${conversation.applicationId}`,
+      ),
+    );
     const data: any = { ...conversation };
     data.event = NotifyEventType.UNASSIGN_CONVERSATION;
     data.room = rooms.join(',');

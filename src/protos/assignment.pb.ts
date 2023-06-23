@@ -8,6 +8,7 @@ export interface AssignAgentToConversationRequest {
   tenantId: number;
   conversationId: string;
   applicationId: string;
+  type: string;
 }
 
 export interface AssignAgentToConversationResponse {

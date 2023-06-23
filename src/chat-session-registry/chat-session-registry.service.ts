@@ -36,9 +36,8 @@ export class ChatSessionRegistryService {
     return new this.model({ ...conversation }).save()
   };
 
-  async checkChatSessionByConversationId(conversationId): Promise<Boolean> {
-    const findChatSession = await this.model.findOne({ _id: conversationId })
-    return Boolean(findChatSession)
+  async checkChatSessionByConversationId(conversationId) {
+    return this.model.findOne({ _id: conversationId })
   }
 
   async saveMessage(data) {

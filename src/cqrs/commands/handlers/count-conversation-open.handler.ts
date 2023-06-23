@@ -22,6 +22,7 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
             cloudTenantId: tenantId
         }
         const Open = this.model.aggregate([
+            { $sort: { startedTime: 1 } },
             {
                 $group: {
                     _id: {
@@ -41,6 +42,7 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
         ])
 
         const Interactive = this.model.aggregate([
+            { $sort: { startedTime: 1 } },
             {
                 $group: {
                     _id: {
