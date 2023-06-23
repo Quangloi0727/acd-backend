@@ -45,16 +45,7 @@ export class ChatSessionSupervisingService {
   ): Promise<Conversation> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
-    if (conversation.conversationState != ConversationState.INTERACTIVE)
-      throw new BadRequestException(
-        'Conversation has not in interactive status!',
-      );
-
-    // const indexOf = conversation.participants.indexOf(agentId.toString());
-    // if (indexOf < 0)
-    //   throw new BadRequestException('Conversation has not handled by agent!');
-
-    // conversation.participants.splice(indexOf, 1);
+    if (conversation.conversationState != ConversationState.INTERACTIVE)throw new BadRequestException('Conversation has not in interactive status!');
     await this.model
       .findByIdAndUpdate(
         conversationId,
