@@ -18,7 +18,7 @@ export class EmailSessionRegistryService {
   getConversationIdFromSubject(subject: string): string {
     if (!subject) return undefined;
     const regex = /#(\w+)/;
-    const match = subject.match(regex);
+    const match = subject.replace('Re: ', '').replace('Re:', '').match(regex);
 
     if (match) {
       return match[1].toLowerCase();

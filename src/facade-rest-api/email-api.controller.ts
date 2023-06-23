@@ -10,6 +10,7 @@ import {
   SendEmailCommand,
 } from '../cqrs';
 import { MarkAsReadDto, MarkAsSpamDto, MarkAsUnreadDto } from './dtos';
+import { SendEmailDto } from './dtos/send-email.dto';
 
 @Controller('email')
 export class EmailManagerApiController {
@@ -71,8 +72,8 @@ export class EmailManagerApiController {
   }
 
   @Post('/send')
-  async sendEmail() {
-    return await this.commandBus.execute(new SendEmailCommand());
+  async sendEmail(@Body() request: SendEmailDto) {
+    return await this.commandBus.execute(new SendEmailCommand(request));
   }
 
   @Post('/assign')
