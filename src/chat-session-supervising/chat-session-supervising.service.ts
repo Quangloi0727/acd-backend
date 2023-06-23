@@ -31,7 +31,7 @@ export class ChatSessionSupervisingService {
       .findByIdAndUpdate(
         conversationId,
         {
-          $push: { participants: agentId},
+          $push: { participants: agentId.toString() },
         },
         { new: true },
       )
