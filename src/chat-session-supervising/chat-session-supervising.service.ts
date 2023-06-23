@@ -23,7 +23,7 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(agentId.toString());
+    const indexOf = conversation.participants.indexOf(agentId);
     if (indexOf > -1)
       throw new BadRequestException('Agent has joined conversation yet!');
 
@@ -31,7 +31,7 @@ export class ChatSessionSupervisingService {
       .findByIdAndUpdate(
         conversationId,
         {
-          $push: { participants: agentId.toString() },
+          $push: { participants: agentId },
         },
         { new: true },
       )
@@ -81,7 +81,7 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(agentId.toString());
+    const indexOf = conversation.participants.indexOf(agentId);
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
@@ -110,14 +110,12 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(
-      currentAgentId.toString(),
-    );
+    const indexOf = conversation.participants.indexOf(currentAgentId);
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
     conversation.participants.splice(indexOf, 1);
-    conversation.participants.push(newAgentId.toString());
+    conversation.participants.push(newAgentId);
 
     const conversationUpdated = await this.model
       .findByIdAndUpdate(
