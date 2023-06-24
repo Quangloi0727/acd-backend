@@ -31,10 +31,14 @@ export class JoinConversationCommandHandler
         command.request.conversationId,
         command.request.cloudAgentId,
       );
-    const rooms = [
-      `${command.request.currentAgentId}_${conversation.cloudTenantId}_${conversation.applicationId}`,
-      `${command.request.cloudAgentId}_${conversation.cloudTenantId}_${conversation.applicationId}`,
-    ];
+      
+    const rooms = []
+    conversation.participants.forEach((p) =>
+      rooms.push(
+        `${p}_${conversation.cloudTenantId}_${conversation.applicationId}`,
+      ),
+    );
+
     const data: any = { ...conversation };
     data.event = NotifyEventType.JOIN_CONVERSATION;
     data.room = rooms.join(',');
