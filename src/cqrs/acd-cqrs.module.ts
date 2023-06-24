@@ -9,6 +9,10 @@ import { ChatSessionSupervisingModule } from '../chat-session-supervising';
 import {
   Conversation,
   ConversationSchema,
+  Email,
+  EmailConversation,
+  EmailConversationSchema,
+  EmailSchema,
   Message,
   MessageSchema,
   Participant,
@@ -30,13 +34,28 @@ import {
   JoinConversationCommandHandler,
   TransferConversationCommandHandler,
   UnassignConversationCommandHandler,
+  LeaveConversationCommandHandler,
+  SendEmailCommandHandler,
+  SaveEmailCommandHandler,
+  GetEmailConversationsCommandHandler,
+  CountEmailConversationCommandHandler,
+  GetEmailDetailCommandHandler,
+  MarkEmailAsReadCommandHandler,
+  MarkEmailAsSpamCommandHandler,
+  MarkEmailAsUnreadCommandHandler,
 } from './commands';
-import { MessageReceivedEventHandler } from './events';
+import {
+  EmailReceivedEventHandler,
+  MessageReceivedEventHandler,
+} from './events';
 import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
 } from './queries';
+import { EmailSessionManagerModule } from 'src/email-session-manager';
+import { EmailSessionRegistryModule } from 'src/email-session-registry';
+import { EmailSessionSupervisingModule } from 'src/email-session-supervising';
 
 const handlers = [
   SaveMessageCommandHandler,
@@ -56,6 +75,16 @@ const handlers = [
   JoinConversationCommandHandler,
   TransferConversationCommandHandler,
   UnassignConversationCommandHandler,
+  LeaveConversationCommandHandler,
+  EmailReceivedEventHandler,
+  SendEmailCommandHandler,
+  SaveEmailCommandHandler,
+  GetEmailConversationsCommandHandler,
+  CountEmailConversationCommandHandler,
+  GetEmailDetailCommandHandler,
+  MarkEmailAsReadCommandHandler,
+  MarkEmailAsSpamCommandHandler,
+  MarkEmailAsUnreadCommandHandler,
 ];
 
 @Module({
@@ -71,10 +100,15 @@ const handlers = [
       { name: Conversation.name, schema: ConversationSchema },
       { name: Tenant.name, schema: TenantSchema },
       { name: Participant.name, schema: ParticipantSchema },
+      { name: Email.name, schema: EmailSchema },
+      { name: EmailConversation.name, schema: EmailConversationSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
     ChatSessionSupervisingModule,
+    EmailSessionManagerModule,
+    EmailSessionRegistryModule,
+    EmailSessionSupervisingModule,
   ],
   providers: [...handlers],
   exports: [...handlers],

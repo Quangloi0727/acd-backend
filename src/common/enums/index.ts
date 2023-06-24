@@ -5,3 +5,4 @@ export * from './conversation-state.enum';
 export * from './message-status.enum';
 export * from './message-type.enum';
 export * from './channel-type.enum';
+export * from './conversation-type.enum';

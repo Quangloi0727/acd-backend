@@ -6,3 +6,7 @@ export * from './reopen-conversation.dto';
 export * from './send-message.dto';
 export * from './transfer-conversation.dto';
 export * from './unassign-conversation.dto';
+export * from './leave-conversation.dto';
+export * from './mark-as-read.dto';
+export * from './mark-as-spam.dto';
+export * from './mark-as-unread.dto';

@@ -90,6 +90,8 @@ export class MessageReceivedEventHandler
       }
       // send kafka event create new conversation
       await this.kafkaService.send(message, checkAgentAssigned ? KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN : KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
+      // thêm riêng cho con lợn hải dương
+      await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
     } else {
       if (conversationDocument.conversationState == ConversationState.OPEN) {
         message.conversationId = conversationDocument._id
@@ -117,9 +119,11 @@ export class MessageReceivedEventHandler
         conversationDocument.lastMessage = messageDocument['_id']
         conversationDocument.save()
         // set room
-        rooms.push(
-          `${conversationDocument.agentPicked}_${message.cloudTenantId}_${message.applicationId}`,
-        )
+        for (const item of conversationDocument.participants){
+          rooms.push(
+            `${item}_${message.cloudTenantId}_${message.applicationId}`,
+          )
+        }
         message['messageId'] = messageDocument['_id']
         message['conversationState'] = ConversationState.INTERACTIVE
         message['conversation'] = {}
@@ -156,6 +160,8 @@ export class MessageReceivedEventHandler
 
         // send kafka event create new conversation
         await this.kafkaService.send(message, checkAgentAssigned ? KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN : KAFKA_TOPIC_MONITOR.CONVERSATION_NEW)
+        // thêm riêng cho con lợn hải dương
+        await this.kafkaService.send(message, KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_RECEIVE)
       }
     }
 

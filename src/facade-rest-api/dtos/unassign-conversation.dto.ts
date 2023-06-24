@@ -4,6 +4,6 @@ export class UnassignConversationDto {
   @IsString()
   conversationId: string;
 
-  @IsNumber()
-  currentAgentId: number;
+  // @IsNumber()
+  // currentAgentId: number;
 }
