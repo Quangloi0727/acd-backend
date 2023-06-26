@@ -4,9 +4,10 @@ import { IsString, IsArray, IsOptional } from 'class-validator';
 import { SendEmailRequest } from '../../protos/email-connector.pb';
 
 export class SendEmailDto {
+  @IsOptional()
   @IsString()
   @Type(() => String)
-  @ApiProperty({ required: true })
+  @ApiProperty({ required: false })
   sender: string;
 
   @IsString()
@@ -38,6 +39,11 @@ export class SendEmailDto {
   @Type(() => String)
   @ApiProperty({ required: true })
   body: string;
+
+  @IsString()
+  @Type(() => String)
+  @ApiProperty({ required: true })
+  conversationId: string;
 
   @IsOptional()
   @IsArray()

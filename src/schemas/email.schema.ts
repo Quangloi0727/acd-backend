@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Attachment, EmailDto } from '../message-consumer';
 import { BaseObject } from '../common/base/base-object';
+import { SendEmailDto } from '../facade-rest-api/dtos/send-email.dto';
 
 export type EmailDocument = Email & Document;
 
@@ -69,6 +70,35 @@ export class Email extends BaseObject<Email> {
       Content: dto.html,
       ReceivedTime: new Date((dto.ctime ?? 0) * 1000),
       attachments: dto.attachments,
+    });
+  }
+
+  static fromSendEmailRequestDto(dto: SendEmailDto) {
+    const now = new Date();
+    return new Email({
+      CreationTime: now,
+      conversationId: dto.conversationId,
+      Subject: dto.subject,
+      SenderName: dto.sender,
+      FromEmail: dto.email,
+      Direction: 'outbound',
+      ToEmail: dto.to,
+      CcEmail: dto.cc,
+      BccEmail: dto.bcc,
+      Content: dto.body,
+      ReceivedTime: now,
+      SentTime: now,
+      attachments: dto.attachments?.map((a) => {
+        return {
+          name: a.name,
+          size: a.buffer.length,
+          relPath: `static/email/${dto.email}/${
+            now.getFullYear
+          }/${now.toLocaleString('en-us', {
+            month: 'short',
+          })}/${now.getDate()}/${a.name}`,
+        } as Attachment;
+      }),
     });
   }
 

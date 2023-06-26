@@ -37,6 +37,10 @@ export class EmailSessionManagerService {
   }
 
   async sendEmail(request: SendEmailRequest) {
-    return lastValueFrom(this.emailConnectorClient.sendEmail(request));
+    try {
+      return lastValueFrom(this.emailConnectorClient.sendEmail(request));
+    } catch (e) {
+      return null;
+    }
   }
 }

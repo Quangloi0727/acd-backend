@@ -73,7 +73,9 @@ export class EmailManagerApiController {
 
   @Post('/send')
   async sendEmail(@Body() request: SendEmailDto) {
-    return await this.commandBus.execute(new SendEmailCommand(request));
+    return await this.commandBus.execute<SendEmailCommand, string>(
+      new SendEmailCommand(request),
+    );
   }
 
   @Post('/assign')
