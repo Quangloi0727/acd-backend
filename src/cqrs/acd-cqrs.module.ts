@@ -43,6 +43,7 @@ import {
   MarkEmailAsReadCommandHandler,
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
+  AssignAgentToConversationCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -85,6 +86,7 @@ const handlers = [
   MarkEmailAsReadCommandHandler,
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
+  AssignAgentToConversationCommandHandler,
 ];
 
 @Module({

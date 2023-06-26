@@ -92,11 +92,13 @@ export class Email extends BaseObject<Email> {
         return {
           name: a.name,
           size: a.buffer.length,
-          relPath: `static/email/${dto.email}/${
-            now.getFullYear
-          }/${now.toLocaleString('en-us', {
+          relPath: `static/email/${
+            dto.email
+          }/${now.getFullYear()}/${now.toLocaleString('en-us', {
             month: 'short',
-          })}/${now.getDate()}/${a.name}`,
+          })}/${now.toLocaleString('en-us', {
+            day: '2-digit',
+          })}/${a.name}`,
         } as Attachment;
       }),
     });
