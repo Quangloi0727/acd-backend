@@ -9,6 +9,7 @@ export interface AssignAgentToConversationRequest {
   conversationId: string;
   applicationId: string;
   type: string;
+  lastAgentId: number;
 }
 
 export interface AssignAgentToConversationResponse {
