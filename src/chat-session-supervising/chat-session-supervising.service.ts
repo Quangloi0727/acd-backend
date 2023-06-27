@@ -53,7 +53,8 @@ export class ChatSessionSupervisingService {
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
-    conversation.participants.splice(indexOf, 1);
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
     await this.model
       .findByIdAndUpdate(
         conversationId,
@@ -61,7 +62,7 @@ export class ChatSessionSupervisingService {
           conversationState: ConversationState.OPEN,
           agentPicked: null,
           pickConversationTime: null,
-          $set: { participants: conversation.participants },
+          $set: { participants: participants },
         },
         { new: true },
       )
@@ -84,17 +85,18 @@ export class ChatSessionSupervisingService {
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
-    conversation.participants.splice(indexOf, 1);
-    const conversationUpdated = await this.model
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
+    await this.model
       .findByIdAndUpdate(
         conversationId,
         {
-          $set: { participants: conversation.participants },
+          $set: { participants: participants },
         },
         { new: true },
       )
       .lean();
-    return conversationUpdated;
+    return conversation;
   }
 
   async transferConversation(
