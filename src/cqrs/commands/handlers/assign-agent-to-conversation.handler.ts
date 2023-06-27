@@ -4,18 +4,25 @@ import { Model } from 'mongoose';
 import { EmailConversation, EmailConversationDocument } from '../../../schemas';
 import { AssignAgentToConversationCommand } from '../assign-agent-to-conversation.command';
 import { ObjectId } from 'mongodb';
+import { LoggingService } from '../../../providers/logging';
 
 @CommandHandler(AssignAgentToConversationCommand)
 export class AssignAgentToConversationCommandHandler
   implements ICommandHandler<AssignAgentToConversationCommand, any>
 {
   constructor(
+    private readonly loggingService: LoggingService,
     @InjectModel(EmailConversation.name)
     private readonly model: Model<EmailConversationDocument>,
   ) {}
 
   async execute(command: AssignAgentToConversationCommand): Promise<any> {
-    console.log(command);
+    await this.loggingService.debug(
+      AssignAgentToConversationCommandHandler,
+      `AssignAgentToConversationCommandHandler request: ${JSON.stringify(
+        command,
+      )}`,
+    );
     return this.model.updateMany(
       {
         _id: {
