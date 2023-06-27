@@ -5,6 +5,7 @@ export interface Attachment {
   relPath: string;
   absPath: string;
   inline: boolean;
+  cid: string;
 }
 
 export interface EmailDto {
