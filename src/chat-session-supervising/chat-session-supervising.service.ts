@@ -42,7 +42,7 @@ export class ChatSessionSupervisingService {
   async unassignConversation(
     conversationId: string,
     // agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
     if (conversation.conversationState != ConversationState.INTERACTIVE)
@@ -55,25 +55,27 @@ export class ChatSessionSupervisingService {
 
     const participants = [...conversation.participants];
     participants.splice(indexOf, 1);
-    await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          conversationState: ConversationState.OPEN,
-          agentPicked: null,
-          pickConversationTime: null,
-          $set: { participants: participants },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversation;
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            conversationState: ConversationState.OPEN,
+            agentPicked: null,
+            pickConversationTime: null,
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async leaveConversation(
     conversationId: string,
     agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
     if (conversation.conversationState != ConversationState.INTERACTIVE)
@@ -87,16 +89,18 @@ export class ChatSessionSupervisingService {
 
     const participants = [...conversation.participants];
     participants.splice(indexOf, 1);
-    await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          $set: { participants: participants },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversation;
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async transferConversation(
