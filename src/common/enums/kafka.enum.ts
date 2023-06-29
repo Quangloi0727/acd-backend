@@ -15,5 +15,6 @@ export const enum KAFKA_TOPIC_MONITOR {
   CONVERSATION_UNASSIGN = 'ACD.Conversation.Unassign',
   CONVERSATION_CLOSE = 'ACD.Conversation.Close',
   CONVERSATION_REOPEN = 'ACD.Conversation.Reopen',
+  CONVERSATION_MESSAGE_TRANSFER = 'ACD.Conversation.Message.Transfer',
   CONVERSATION_GENERAL_REPORT = 'ACD.Conversation.General.Report',
 }

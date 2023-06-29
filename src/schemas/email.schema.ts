@@ -5,6 +5,7 @@ import { BaseObject } from '../common/base/base-object';
 import { SendEmailDto } from '../facade-rest-api/dtos/send-email.dto';
 
 export type EmailDocument = Email & Document;
+export const FILE_PREFIX_URL = 'static';
 
 @Schema({ collection: 'email' })
 export class Email extends BaseObject<Email> {
@@ -67,9 +68,9 @@ export class Email extends BaseObject<Email> {
       CcEmail: this.checkAndParseEmailAddress(dto.cc),
       BccEmail: this.checkAndParseEmailAddress(dto.bcc),
       TenantId: dto.tenantId,
-      Content: dto.html,
+      Content: this.updateInlineAttatchmentPath(dto.html, dto.attachments),
       ReceivedTime: new Date((dto.ctime ?? 0) * 1000),
-      attachments: dto.attachments,
+      attachments: this.updateAttatchmentPath(dto.attachments),
     });
   }
 
@@ -92,11 +93,13 @@ export class Email extends BaseObject<Email> {
         return {
           name: a.name,
           size: a.buffer.length,
-          relPath: `static/email/${dto.email}/${
-            now.getFullYear
-          }/${now.toLocaleString('en-us', {
+          relPath: `${FILE_PREFIX_URL}/email/${
+            dto.email
+          }/${now.getFullYear()}/${now.toLocaleString('en-us', {
             month: 'short',
-          })}/${now.getDate()}/${a.name}`,
+          })}/${now.toLocaleString('en-us', {
+            day: '2-digit',
+          })}/${a.name}`,
         } as Attachment;
       }),
     });
@@ -126,6 +129,25 @@ export class Email extends BaseObject<Email> {
       else emails.push(e);
     }
     return emails.join(',');
+  }
+
+  static updateAttatchmentPath(attachments: Attachment[]) {
+    attachments?.forEach((a) => {
+      a.relPath = `${FILE_PREFIX_URL}/${a.relPath}`;
+    });
+    return attachments;
+  }
+
+  static updateInlineAttatchmentPath(html: string, attachments: Attachment[]) {
+    let content = html;
+    attachments?.forEach((a) => {
+      content = content.replace(
+        `cid:${a.cid.replace('<', '').replace('>', '')}`,
+        `${FILE_PREFIX_URL}/${a.relPath}`,
+      );
+    });
+
+    return content;
   }
 }
 

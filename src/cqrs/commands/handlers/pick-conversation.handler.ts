@@ -29,7 +29,7 @@ export class PickConversationCommandHandler implements ICommandHandler<PickConve
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             agentPicked: cloudAgentId,
             conversationState: ConversationState.INTERACTIVE,
-            $push: { participants: String(cloudAgentId) },
+            $push: { participants: cloudAgentId },
             pickConversationTime:new Date()
         }, { new: true }).lean()
         const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]

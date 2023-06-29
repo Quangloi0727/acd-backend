@@ -42,29 +42,40 @@ export class ChatSessionSupervisingService {
   async unassignConversation(
     conversationId: string,
     // agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
-    if (conversation.conversationState != ConversationState.INTERACTIVE)throw new BadRequestException('Conversation has not in interactive status!');
-    await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          conversationState: ConversationState.OPEN,
-          agentPicked: null,
-          pickConversationTime: null,
-          $set: { participants: [conversation.senderId] },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversation;
+    if (conversation.conversationState != ConversationState.INTERACTIVE)
+      throw new BadRequestException(
+        'Conversation has not in interactive status!',
+      );
+    const indexOf = conversation.participants.indexOf(conversation.agentPicked);
+    if (indexOf < 0)
+      throw new BadRequestException('Conversation has not handled by agent!');
+
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            conversationState: ConversationState.OPEN,
+            agentPicked: null,
+            pickConversationTime: null,
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async leaveConversation(
     conversationId: string,
     agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
     if (conversation.conversationState != ConversationState.INTERACTIVE)
@@ -76,17 +87,20 @@ export class ChatSessionSupervisingService {
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
-    conversation.participants.splice(indexOf, 1);
-    const conversationUpdated = await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          $set: { participants: conversation.participants },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversationUpdated;
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async transferConversation(

@@ -26,14 +26,14 @@ export class LeaveConversationCommandHandler
         command.request,
       )}`,
     );
-    const conversation =
+    const [conversation, participants] =
       await this.chatSessionSupervisingService.leaveConversation(
         command.request.conversationId,
         command.request.currentAgentId,
       );
 
     const rooms = []
-    conversation.participants.forEach((p) =>
+    participants.forEach((p) =>
       rooms.push(
         `${p}_${conversation.cloudTenantId}_${conversation.applicationId}`,
       ),

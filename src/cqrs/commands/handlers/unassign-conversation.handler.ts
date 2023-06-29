@@ -26,7 +26,7 @@ export class UnassignConversationCommandHandler
         command.request,
       )}`,
     );
-    const conversation =
+    const [conversation, participants] =
       await this.chatSessionSupervisingService.unassignConversation(
         command.request.conversationId,
       );
@@ -35,7 +35,6 @@ export class UnassignConversationCommandHandler
     data.event = NotifyEventType.UNASSIGN_CONVERSATION;
     data.room = rooms.join(',');
     data.conversationId = command.request.conversationId;
-    data.pickedBy = conversation.agentPicked;
     
     // notify to agent
     await this.commandBus.execute(

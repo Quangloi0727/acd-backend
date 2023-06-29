@@ -32,7 +32,7 @@ export class EmailReceivedEventHandler
     const email = Email.fromDto(event.email);
     this.loggingService.debug(
       EmailReceivedEventHandler,
-      `Received a email: ${JSON.stringify(email)}`,
+      `Received a email from : ${email.FromEmail}, to: ${email.ToEmail}`,
     );
 
     // parse subject to get conversation id

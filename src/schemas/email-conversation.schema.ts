@@ -33,7 +33,7 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   @Prop({ default: false })
   Readed: boolean;
   @Prop()
-  EmailChannelId: string;
+  EmailChannelId: number;
   @Prop()
   SlaStatus: boolean;
   @Prop()
