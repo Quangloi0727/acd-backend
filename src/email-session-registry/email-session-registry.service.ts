@@ -18,7 +18,7 @@ export class EmailSessionRegistryService {
   getConversationIdFromSubject(subject: string): string {
     if (!subject) return undefined;
     const regex = /#(\w+)/;
-    const match = subject.match(regex);
+    const match = subject.replace('Re: ', '').replace('Re:', '').match(regex);
 
     if (match) {
       return match[1].toLowerCase();
@@ -39,7 +39,7 @@ export class EmailSessionRegistryService {
   async assignAgentToSession(
     conversationId: string,
     applicationId: string,
-    tenantId: number,
+    tenantId: number
   ) {
     try {
       const availableAgentId = await lastValueFrom(
@@ -48,6 +48,7 @@ export class EmailSessionRegistryService {
           tenantId: tenantId,
           applicationId: applicationId,
           type: ConversationType.EMAIL,
+          lastAgentId: null
         }),
       );
       return availableAgentId;

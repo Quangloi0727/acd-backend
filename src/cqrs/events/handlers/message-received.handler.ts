@@ -79,7 +79,7 @@ export class MessageReceivedEventHandler
       conversationCreated.lastMessage = messageDocument['_id']
       conversationCreated.messages.push(messageDocument['_id'])
 
-      checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+      checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, null)
 
       message['conversation'] = conversationCreated.toObject()
       message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
@@ -100,7 +100,7 @@ export class MessageReceivedEventHandler
         conversationDocument.lastTime = new Date()
         conversationDocument.lastMessage = messageDocument['_id']
 
-        checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, conversationDocument.agentPicked)
 
         rooms = [`${message.cloudTenantId}_${message.applicationId}`]
 
@@ -148,7 +148,7 @@ export class MessageReceivedEventHandler
         conversationCreated.lastMessage = messageDocument['_id']
         conversationCreated.messages.push(messageDocument['_id'])
 
-        checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, conversationDocument.agentPicked)
 
         message['conversation'] = conversationCreated.toObject()
         message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
@@ -188,8 +188,8 @@ export class MessageReceivedEventHandler
     )
   }
 
-  private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message) {
-    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId)
+  private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, lastAgentId) {
+    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId, lastAgentId)
     await this.loggingService.debug(MessageReceivedEventHandler, `response from grpc agent assignment is: ${responseAssign.code}, ${responseAssign.message}`)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true

@@ -23,7 +23,7 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(agentId.toString());
+    const indexOf = conversation.participants.indexOf(agentId);
     if (indexOf > -1)
       throw new BadRequestException('Agent has joined conversation yet!');
 
@@ -31,7 +31,7 @@ export class ChatSessionSupervisingService {
       .findByIdAndUpdate(
         conversationId,
         {
-          $push: { participants: agentId},
+          $push: { participants: agentId },
         },
         { new: true },
       )
@@ -42,38 +42,40 @@ export class ChatSessionSupervisingService {
   async unassignConversation(
     conversationId: string,
     // agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
     if (conversation.conversationState != ConversationState.INTERACTIVE)
       throw new BadRequestException(
         'Conversation has not in interactive status!',
       );
+    const indexOf = conversation.participants.indexOf(conversation.agentPicked);
+    if (indexOf < 0)
+      throw new BadRequestException('Conversation has not handled by agent!');
 
-    // const indexOf = conversation.participants.indexOf(agentId.toString());
-    // if (indexOf < 0)
-    //   throw new BadRequestException('Conversation has not handled by agent!');
-
-    // conversation.participants.splice(indexOf, 1);
-    await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          conversationState: ConversationState.OPEN,
-          agentPicked: null,
-          pickConversationTime: null,
-          $set: { participants: [conversation.senderId] },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversation;
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            conversationState: ConversationState.OPEN,
+            agentPicked: null,
+            pickConversationTime: null,
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async leaveConversation(
     conversationId: string,
     agentId: number,
-  ): Promise<Conversation> {
+  ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
     if (conversation.conversationState != ConversationState.INTERACTIVE)
@@ -81,21 +83,24 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(agentId.toString());
+    const indexOf = conversation.participants.indexOf(agentId);
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
-    conversation.participants.splice(indexOf, 1);
-    const conversationUpdated = await this.model
-      .findByIdAndUpdate(
-        conversationId,
-        {
-          $set: { participants: conversation.participants },
-        },
-        { new: true },
-      )
-      .lean();
-    return conversationUpdated;
+    const participants = [...conversation.participants];
+    participants.splice(indexOf, 1);
+    return [
+      await this.model
+        .findByIdAndUpdate(
+          conversationId,
+          {
+            $set: { participants: participants },
+          },
+          { new: true },
+        )
+        .lean(),
+      conversation.participants,
+    ];
   }
 
   async transferConversation(
@@ -110,14 +115,12 @@ export class ChatSessionSupervisingService {
         'Conversation has not in interactive status!',
       );
 
-    const indexOf = conversation.participants.indexOf(
-      currentAgentId.toString(),
-    );
+    const indexOf = conversation.participants.indexOf(currentAgentId);
     if (indexOf < 0)
       throw new BadRequestException('Conversation has not handled by agent!');
 
     conversation.participants.splice(indexOf, 1);
-    conversation.participants.push(newAgentId.toString());
+    conversation.participants.push(newAgentId);
 
     const conversationUpdated = await this.model
       .findByIdAndUpdate(

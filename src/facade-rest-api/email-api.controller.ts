@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import {
+  AssignAgentToConversationCommand,
   CountEmailConversationCommand,
   GetEmailConversationsCommand,
   GetEmailDetailCommand,
@@ -10,6 +11,8 @@ import {
   SendEmailCommand,
 } from '../cqrs';
 import { MarkAsReadDto, MarkAsSpamDto, MarkAsUnreadDto } from './dtos';
+import { SendEmailDto } from './dtos/send-email.dto';
+import { AssignEmailDto } from './dtos/assign-email.dto';
 
 @Controller('email')
 export class EmailManagerApiController {
@@ -71,12 +74,16 @@ export class EmailManagerApiController {
   }
 
   @Post('/send')
-  async sendEmail() {
-    return await this.commandBus.execute(new SendEmailCommand());
+  async sendEmail(@Body() request: SendEmailDto) {
+    return await this.commandBus.execute<SendEmailCommand, string>(
+      new SendEmailCommand(request),
+    );
   }
 
   @Post('/assign')
-  async assignEmail() {
-    return true;
+  async assignEmail(@Body() request: AssignEmailDto) {
+    return await this.commandBus.execute(
+      new AssignAgentToConversationCommand(request.agentId, request.emailIds),
+    );
   }
 }
