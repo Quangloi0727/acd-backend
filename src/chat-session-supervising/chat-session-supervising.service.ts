@@ -78,7 +78,7 @@ export class ChatSessionSupervisingService {
   ): Promise<[Conversation, any[]]> {
     const conversation = await this.model.findById(conversationId).lean();
     if (!conversation) throw new BadRequestException('conversation not found!');
-    if (conversation.conversationState != ConversationState.INTERACTIVE)
+    if (conversation.conversationState != ConversationState.INTERACTIVE && conversation.conversationState != ConversationState.OPEN)
       throw new BadRequestException(
         'Conversation has not in interactive status!',
       );
