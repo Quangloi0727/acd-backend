@@ -69,7 +69,7 @@ export class Email extends BaseObject<Email> {
       BccEmail: this.checkAndParseEmailAddress(dto.bcc),
       TenantId: dto.tenantId,
       Content: this.updateInlineAttatchmentPath(dto.html, dto.attachments),
-      ReceivedTime: new Date((dto.ctime ?? 0) * 1000),
+      ReceivedTime: dto.ctime ? new Date(dto.ctime * 1000) : new Date(),
       attachments: this.updateAttatchmentPath(dto.attachments),
     });
   }

@@ -13,6 +13,8 @@ import {
   EmailConversation,
   EmailConversationSchema,
   EmailSchema,
+  EmailSpam,
+  EmailSpamSchema,
   Message,
   MessageSchema,
   Participant,
@@ -44,6 +46,7 @@ import {
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
   AssignAgentToConversationCommandHandler,
+  NotifyNewEmailToAgentCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -87,6 +90,7 @@ const handlers = [
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
   AssignAgentToConversationCommandHandler,
+  NotifyNewEmailToAgentCommandHandler,
 ];
 
 @Module({
@@ -104,6 +108,7 @@ const handlers = [
       { name: Participant.name, schema: ParticipantSchema },
       { name: Email.name, schema: EmailSchema },
       { name: EmailConversation.name, schema: EmailConversationSchema },
+      { name: EmailSpam.name, schema: EmailSpamSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
