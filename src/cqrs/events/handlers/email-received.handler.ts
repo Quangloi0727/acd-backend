@@ -5,14 +5,18 @@ import {
   QueryBus,
 } from '@nestjs/cqrs';
 import { LoggingService } from '../../../providers/logging';
-import { NotifyNewEmailToAgentCommand, SaveEmailCommand } from '../..';
+import {
+  EventPublisherCommand,
+  NotifyNewEmailToAgentCommand,
+  SaveEmailCommand,
+} from '../..';
 import { Email, EmailConversationDocument } from '../../../schemas';
 import { Inject } from '@nestjs/common';
 import { KafkaClientService, KafkaService } from '../../../providers/kafka';
 import { EmailReceivedEvent } from '../email-received.event';
 import { EmailSessionManagerService } from '../../../email-session-manager';
 import { EmailSessionRegistryService } from '../../../email-session-registry';
-import { NotifyEventType } from '../../../common/enums';
+import { KAFKA_TOPIC_MONITOR, NotifyEventType } from '../../../common/enums';
 
 @EventsHandler(EmailReceivedEvent)
 export class EmailReceivedEventHandler
@@ -85,16 +89,24 @@ export class EmailReceivedEventHandler
     await conversation.save();
     // save email
     await this.commandBus.execute(new SaveEmailCommand(email));
+    await this.commandBus.execute(
+      new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_RECEIVED, email),
+    );
 
     // notify to agent
-    if (conversationAssigned?.agentId)
+    if (conversationAssigned?.agentId) {
       await this.commandBus.execute(
-        new NotifyNewEmailToAgentCommand({
-          Message: 'Một email mới vừa được phân công',
-          ListUserReceivedNotify: [Number(conversationAssigned.agentId)],
-          TenantId: conversation.TenantId,
-          Type: NotifyEventType.EMAIL_ASSIGNMENT,
-        }),
+        new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_ASSIGNED, email),
       );
+      if (!conversation.SpamMarked)
+        await this.commandBus.execute(
+          new NotifyNewEmailToAgentCommand({
+            Message: 'Một email mới vừa được phân công',
+            ListUserReceivedNotify: [Number(conversationAssigned.agentId)],
+            TenantId: conversation.TenantId,
+            Type: NotifyEventType.EMAIL_ASSIGNMENT,
+          }),
+        );
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsOptional, IsNumber } from 'class-validator';
 import { SendEmailRequest } from '../../protos/email-connector.pb';
 
 export class SendEmailDto {
@@ -40,9 +40,21 @@ export class SendEmailDto {
   @ApiProperty({ required: true })
   body: string;
 
-  @IsString()
-  @Type(() => String)
+  @IsNumber()
+  @Type(() => Number)
   @ApiProperty({ required: true })
+  tenantId: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @ApiProperty({ required: false })
+  agentId: number;
+
+  @IsString()
+  @IsOptional()
+  @Type(() => String)
+  @ApiProperty({ required: false })
   conversationId: string;
 
   @IsOptional()
@@ -53,7 +65,7 @@ export class SendEmailDto {
   static toSendEmailRequest(request: SendEmailDto) {
     return {
       message: {
-        sender: request.sender,
+        sender: request.sender ? request.sender : request.email,
         email: request.email,
         to: request.to?.split(','),
         cc: request.cc?.split(','),

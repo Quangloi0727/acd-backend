@@ -6,6 +6,8 @@ import { LoggingService } from '../../../providers/logging';
 import { SaveEmailCommand } from '../save-email.command';
 import { Email, EmailDocument } from '../../../schemas';
 import { EmailSessionRegistryService } from '../../../email-session-registry';
+import { EventPublisherCommand } from '../event-publisher.command';
+import { KAFKA_TOPIC_MONITOR } from '../../../common/enums';
 
 @CommandHandler(SendEmailCommand)
 export class SendEmailCommandHandler
@@ -23,6 +25,33 @@ export class SendEmailCommandHandler
       SendEmailCommandHandler,
       `SendEmailCommandHandler request from email: ${command.message.email}, to: ${command.message.to}`,
     );
+    let conversation = command.message.conversationId
+      ? await this.emailSessionRegistryService.getEmailConversationById(
+          command.message.conversationId,
+        )
+      : null;
+    if (!conversation) {
+      conversation =
+        await this.emailSessionManagerService.createEmailConversation(
+          new Email({
+            ReceivedTime: new Date(),
+            SenderName: command.message.sender
+              ? command.message.sender
+              : command.message.email,
+            TenantId: command.message.tenantId,
+            FromEmail: command.message.email,
+            ToEmail: command.message.to,
+            CcEmail: command.message.cc,
+            BccEmail: command.message.bcc,
+            Subject: command.message.subject,
+          }),
+        );
+      conversation.SpamMarked = false;
+      conversation.AgentId = command.message.agentId;
+      conversation.AssignedDate = new Date();
+      await conversation.save();
+      command.message.conversationId = conversation.id;
+    }
 
     const sendEmailRequest = SendEmailDto.toSendEmailRequest(command.message);
     const subjectConversationId =
@@ -55,6 +84,10 @@ export class SendEmailCommandHandler
         EmailDocument
       >(new SaveEmailCommand(email_request));
       // notify to agent
+
+      await this.commandBus.execute(
+        new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_SENT, email),
+      );
       return email.id;
     }
     return null;
