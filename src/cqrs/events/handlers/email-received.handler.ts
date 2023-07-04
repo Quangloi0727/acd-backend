@@ -86,6 +86,9 @@ export class EmailReceivedEventHandler
     conversation.Readed = false;
     conversation.Reader = undefined;
     conversation.ReadedTime = undefined;
+
+    conversation.Content = email.Content;
+    conversation.TimeReply = new Date(Date.now() + 10 * 60000); // sla reply after 10 mins
     await conversation.save();
     // save email
     await this.commandBus.execute(new SaveEmailCommand(email));

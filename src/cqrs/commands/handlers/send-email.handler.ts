@@ -88,6 +88,8 @@ export class SendEmailCommandHandler
       await this.commandBus.execute(
         new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_SENT, email),
       );
+      conversation.RelatedEmailId = email.id;
+      await conversation.save();
       return email.id;
     }
     return null;
