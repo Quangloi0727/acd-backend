@@ -49,6 +49,9 @@ export class SendEmailCommandHandler
       conversation.SpamMarked = false;
       conversation.AgentId = command.message.agentId;
       conversation.AssignedDate = new Date();
+      conversation.Readed = true;
+      conversation.Reader = command.message.agentId;
+      conversation.ReadedTime = new Date();
       await conversation.save();
       command.message.conversationId = conversation.id;
     }
@@ -86,7 +89,19 @@ export class SendEmailCommandHandler
       // notify to agent
 
       await this.commandBus.execute(
-        new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_SENT, email),
+        new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_SENT, {
+          AgentId: command.message.agentId,
+          TenantId: command.message.tenantId,
+          ConversationId: conversation.id,
+          FromEmail: email.FromEmail,
+          ToEmail: email.ToEmail,
+          CcEmail: email.CcEmail,
+          BccEmail: email.BccEmail,
+          SenderName: email.SenderName,
+          Subject: email.Subject,
+          Content: email.Content,
+          Timestamp: email.SentTime.getTime(),
+        }),
       );
       conversation.Content = email.Content;
       conversation.RelatedEmailId = email.id;

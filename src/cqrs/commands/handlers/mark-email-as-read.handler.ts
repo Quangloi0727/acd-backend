@@ -26,23 +26,36 @@ export class MarkEmailAsReadCommandHandler
         command.request,
       )}`,
     );
-    await this.commandBus.execute(
-      new EventPublisherCommand(
-        KAFKA_TOPIC_MONITOR.EMAIL_READ,
-        command.request,
-      ),
-    );
-    return await this.model.updateOne(
-      {
-        _id: new ObjectId(command.request.conversationId),
-      },
-      {
-        $set: {
-          Readed: true,
-          Reader: command.request.agentId,
-          ReadedTime: new Date(),
+    const conversation = await this.model.findOne({
+      _id: new ObjectId(command.request.conversationId),
+    });
+    if (conversation && conversation.Readed === false) {
+      await this.commandBus.execute(
+        new EventPublisherCommand(KAFKA_TOPIC_MONITOR.EMAIL_READ, {
+          AgentId: command.request.agentId,
+          TenantId: conversation.TenantId,
+          ConversationId: conversation.id,
+          FromEmail: conversation.FromEmail,
+          ToEmail: conversation.ToEmail,
+          CcEmail: conversation.CcEmail,
+          BccEmail: conversation.BccEmail,
+          SenderName: conversation.SenderName,
+          Timestamp: Date.now(),
+        }),
+      );
+      return await this.model.updateOne(
+        {
+          _id: new ObjectId(command.request.conversationId),
         },
-      },
-    );
+        {
+          $set: {
+            Readed: true,
+            Reader: command.request.agentId,
+            ReadedTime: new Date(),
+          },
+        },
+      );
+    }
+    return null;
   }
 }
