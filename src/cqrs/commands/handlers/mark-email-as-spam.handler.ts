@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -10,6 +10,8 @@ import {
 import { ObjectId } from 'mongodb';
 import { MarkEmailAsSpamCommand } from '../mark-email-as-spam.command';
 import { LoggingService } from '../../../providers/logging';
+import { EventPublisherCommand } from '../event-publisher.command';
+import { KAFKA_TOPIC_MONITOR } from '../../../common/enums';
 
 @CommandHandler(MarkEmailAsSpamCommand)
 export class MarkEmailAsSpamCommandHandler
@@ -21,6 +23,7 @@ export class MarkEmailAsSpamCommandHandler
     private readonly model: Model<EmailConversationDocument>,
     @InjectModel(EmailSpam.name)
     private readonly emailSpamModel: Model<EmailSpamDocument>,
+    private readonly commandBus: CommandBus,
   ) {}
 
   async execute(command: MarkEmailAsSpamCommand): Promise<any> {
@@ -51,11 +54,23 @@ export class MarkEmailAsSpamCommandHandler
         });
         await email_spam.save();
       }
+      await this.commandBus.execute(
+        new EventPublisherCommand(
+          KAFKA_TOPIC_MONITOR.EMAIL_SPAM_MARKED,
+          command.request,
+        ),
+      );
     } else {
       await this.emailSpamModel.deleteMany({
         TenantId: conversation.TenantId,
         Email: conversation.FromEmail,
       });
+      await this.commandBus.execute(
+        new EventPublisherCommand(
+          KAFKA_TOPIC_MONITOR.EMAIL_SPAM_UNMARKED,
+          command.request,
+        ),
+      );
     }
 
     return await this.model.updateOne(

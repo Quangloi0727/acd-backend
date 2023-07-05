@@ -33,6 +33,7 @@ export class EmailSessionManagerService {
       ToEmail: email.ToEmail,
       CcEmail: email.CcEmail,
       BccEmail: email.BccEmail,
+      Subject: email.Subject,
     });
   }
 

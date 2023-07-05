@@ -36,6 +36,7 @@ export class GetEmailConversationsCommandHandler
       .find({
         $and: matchQueries,
       })
+      .sort({ ReceivedTime: -1 })
       .limit(command.row + 10);
   }
 }

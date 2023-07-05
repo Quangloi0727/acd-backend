@@ -17,4 +17,11 @@ export const enum KAFKA_TOPIC_MONITOR {
   CONVERSATION_REOPEN = 'ACD.Conversation.Reopen',
   CONVERSATION_MESSAGE_TRANSFER = 'ACD.Conversation.Message.Transfer',
   CONVERSATION_GENERAL_REPORT = 'ACD.Conversation.General.Report',
+  EMAIL_RECEIVED = 'ACD.Email.Received',
+  EMAIL_ASSIGNED = 'ACD.Email.Assigned',
+  EMAIL_SENT = 'ACD.Email.Sent',
+  EMAIL_READ = 'ACD.Email.Read',
+  EMAIL_UNREAD = 'ACD.Email.Unread',
+  EMAIL_SPAM_MARKED = 'ACD.Email.SpamMarked',
+  EMAIL_SPAM_UNMARKED = 'ACD.Email.SpamUnmarked',
 }

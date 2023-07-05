@@ -34,7 +34,7 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   Readed: boolean;
   @Prop()
   EmailChannelId: number;
-  @Prop()
+  @Prop({ default: false })
   SlaStatus: boolean;
   @Prop()
   Reader: number;
@@ -46,6 +46,13 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   AgentId: number;
   @Prop()
   AssignedDate: Date;
+
+  @Prop()
+  Content: string;
+  @Prop()
+  RelatedEmailId: string;
+  @Prop()
+  TimeReply: Date;
 }
 
 export const EmailConversationSchema =
