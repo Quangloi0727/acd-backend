@@ -21,7 +21,7 @@ export class NotifyNewMessageToAgentCommandHandler
   async execute(
     command: NotifyNewMessageToAgentCommand,
   ): Promise<NotificationServerApiBaseResponse> {
-    const base_url = process.env.NOTIFICATION_SERVER_URL || 'localhost:3000';
+    const base_url = process.env.NOTIFICATION_SERVER_URL || 'http://localhost:3000';
     try {
       const { data } = await firstValueFrom(
         this.httpService
