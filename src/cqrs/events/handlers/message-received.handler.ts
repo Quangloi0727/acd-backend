@@ -190,7 +190,6 @@ export class MessageReceivedEventHandler
 
   private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, lastAgentId) {
     const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId, lastAgentId)
-    await this.loggingService.debug(MessageReceivedEventHandler, `response from grpc agent assignment is: ${responseAssign.code}, ${responseAssign.message}`)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
     await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)
