@@ -91,15 +91,15 @@ export class Email extends BaseObject<Email> {
       SentTime: now,
       attachments: dto.attachments?.map((a) => {
         return {
-          name: a.name,
-          size: a.buffer.length,
+          name: a?.name,
+          size: a?.buffer.length,
           relPath: `${FILE_PREFIX_URL}/email/${
             dto.email
           }/${now.getFullYear()}/${now.toLocaleString('en-us', {
             month: 'short',
           })}/${now.toLocaleString('en-us', {
             day: '2-digit',
-          })}/${a.name}`,
+          })}/${a?.name}`,
         } as Attachment;
       }),
     });
@@ -133,7 +133,7 @@ export class Email extends BaseObject<Email> {
 
   static updateAttatchmentPath(attachments: Attachment[]) {
     attachments?.forEach((a) => {
-      a.relPath = `${FILE_PREFIX_URL}/${a.relPath}`;
+      if (a && a.relPath) a.relPath = `${FILE_PREFIX_URL}/${a?.relPath}`;
     });
     return attachments;
   }
@@ -141,10 +141,11 @@ export class Email extends BaseObject<Email> {
   static updateInlineAttatchmentPath(html: string, attachments: Attachment[]) {
     let content = html;
     attachments?.forEach((a) => {
-      content = content.replace(
-        `cid:${a.cid.replace('<', '').replace('>', '')}`,
-        `${FILE_PREFIX_URL}/${a.relPath}`,
-      );
+      if (a)
+        content = content.replace(
+          `cid:${a?.cid?.replace('<', '')?.replace('>', '')}`,
+          `${FILE_PREFIX_URL}/${a?.relPath}`,
+        );
     });
 
     return content;
