@@ -57,6 +57,7 @@ import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
+  GetConversationByIdQueryHandler
 } from './queries';
 import { EmailSessionManagerModule } from 'src/email-session-manager';
 import { EmailSessionRegistryModule } from 'src/email-session-registry';
@@ -73,6 +74,7 @@ const handlers = [
   FindBySenderCommandHandler,
   MessageReceivedEventHandler,
   ChatHistoryQueryHandler,
+  GetConversationByIdQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
   CountConversationOpenCommandHandler,

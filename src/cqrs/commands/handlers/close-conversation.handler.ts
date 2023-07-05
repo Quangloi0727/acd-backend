@@ -23,12 +23,12 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
     async execute(body) {
         await this.loggingService.debug(CloseConversationCommandHandler, `Data receive is: ${JSON.stringify(body.body)}`)
         const { conversationId } = body.body
-        const findConversation = await this.model.findById(conversationId).lean()
+        const findConversation = await this.model.findById(conversationId).lean().exec()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             conversationState: ConversationState.CLOSE,
             closedTime: new Date()
-        }, { new: true }).lean()
+        }, { new: true }).lean().exec()
         const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         const data: any = { ...conversationUpdated }
         data.event = NotifyEventType.CLOSE_CONVERSATION
@@ -51,10 +51,39 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
             )
         )
 
-        return {
-            statusCode: 200,
-            success: true
+        // import case if exist conversation have status different close update all before status to close
+        const findListConver = await this.model.find({ 
+            senderId: findConversation.senderId,
+            applicationId:findConversation.applicationId,
+            conversationState: { $ne: ConversationState.CLOSE } 
+        }).lean().exec()
+
+        if (!findConversation || !findListConver.length){
+            return {
+                statusCode: 200,
+                success: true
+            }
+        }else{
+            for (const el of findListConver){
+                const conversationUpdatedImplement = await this.model.findByIdAndUpdate(el._id, {
+                    conversationState: ConversationState.CLOSE,
+                    closedTime: new Date()
+                }, { new: true }).lean().exec()
+                const dataImplement: any = { ...conversationUpdatedImplement }
+                dataImplement.event = NotifyEventType.CLOSE_CONVERSATION
+                dataImplement.room = rooms.join(',')
+                dataImplement.conversationId = conversationUpdatedImplement._id
+                // send kafka event close conversation
+                await this.kafkaService.send(dataImplement, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE)
+                // send kafka event general report
+                await this.kafkaService.send(this.generalReportConversation(conversationUpdatedImplement), KAFKA_TOPIC_MONITOR.CONVERSATION_GENERAL_REPORT)
+            }
+            return {
+                statusCode: 200,
+                success: true
+            }
         }
+
     }
 
     private generalReportConversation(conversation) {

@@ -94,7 +94,8 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     cloudTenantId: { $last: "$cloudTenantId" },
                     conversationState: { $last: "$conversationState" },
                     lastMessage: { $last: "$lastMessage" },
-                    agentPicked: { $last: "$agentPicked" }
+                    agentPicked: { $last: "$agentPicked" },
+                    participants: { $last: "$participants" }
                 }
             },
             { $match: _queryImplement },
