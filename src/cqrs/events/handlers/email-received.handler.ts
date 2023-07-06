@@ -2,7 +2,8 @@ import {
   IEventHandler,
   EventsHandler,
   CommandBus,
-  QueryBus,
+  CommandHandler,
+  ICommandHandler,
 } from '@nestjs/cqrs';
 import { LoggingService } from '../../../providers/logging';
 import {
@@ -15,28 +16,24 @@ import {
   EmailConversationDocument,
   EmailDocument,
 } from '../../../schemas';
-import { Inject } from '@nestjs/common';
-import { KafkaClientService, KafkaService } from '../../../providers/kafka';
 import { EmailReceivedEvent } from '../email-received.event';
 import { EmailSessionManagerService } from '../../../email-session-manager';
 import { EmailSessionRegistryService } from '../../../email-session-registry';
 import { KAFKA_TOPIC_MONITOR, NotifyEventType } from '../../../common/enums';
+import { ObjectId } from 'mongodb';
 
-@EventsHandler(EmailReceivedEvent)
+@CommandHandler(EmailReceivedEvent)
 export class EmailReceivedEventHandler
-  implements IEventHandler<EmailReceivedEvent>
+  implements ICommandHandler<EmailReceivedEvent>
 {
   constructor(
     private readonly loggingService: LoggingService,
     private readonly emailSessionManagerService: EmailSessionManagerService,
     private readonly emailSessionRegistryService: EmailSessionRegistryService,
     private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-    @Inject(KafkaClientService)
-    private kafkaService: KafkaService,
   ) {}
 
-  async handle(event: EmailReceivedEvent) {
+  async execute(event: EmailReceivedEvent) {
     const email = Email.fromDto(event.email);
     this.loggingService.debug(
       EmailReceivedEventHandler,
@@ -48,16 +45,14 @@ export class EmailReceivedEventHandler
       this.emailSessionRegistryService.getConversationIdFromSubject(
         email.Subject,
       );
-
     let conversation: EmailConversationDocument = null;
     // find conversation by id
-    if (conversationId) {
+    if (conversationId && ObjectId.isValid(conversationId)) {
       conversation =
         await this.emailSessionRegistryService.getEmailConversationById(
           conversationId,
         );
     }
-
     // if not exist conversation -> create new conversations and create subject with conversationid tag
     if (!conversation) {
       conversation =
