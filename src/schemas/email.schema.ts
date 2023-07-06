@@ -123,9 +123,9 @@ export class Email extends BaseObject<Email> {
     if (!inputString) return inputString;
     const emails = [];
     for (const e of inputString.split(',')) {
-      const regex = /[^\s<>]+@[^\s<>]+/g;
-      const results = e.match(regex);
-      if (results) emails.push(results.join(','));
+      const regex = /<([^>]+)>/g;
+      const results = regex.exec(inputString);
+      if (results && e.includes('<')) emails.push(results[1]);
       else emails.push(e);
     }
     return emails.join(',');

@@ -68,7 +68,7 @@ export class EmailReceivedEventHandler
           email.TenantId,
           email.FromEmail,
         );
-      conversation.save();
+      await conversation.save();
     }
 
     // Assign agent for email
