@@ -8,6 +8,7 @@ import { Email, EmailDocument } from '../../../schemas';
 import { EmailSessionRegistryService } from '../../../email-session-registry';
 import { EventPublisherCommand } from '../event-publisher.command';
 import { KAFKA_TOPIC_MONITOR } from '../../../common/enums';
+import { ObjectId } from 'mongodb';
 
 @CommandHandler(SendEmailCommand)
 export class SendEmailCommandHandler
@@ -25,11 +26,13 @@ export class SendEmailCommandHandler
       SendEmailCommandHandler,
       `SendEmailCommandHandler request from email: ${command.message.email}, to: ${command.message.to}`,
     );
-    let conversation = command.message.conversationId
-      ? await this.emailSessionRegistryService.getEmailConversationById(
-          command.message.conversationId,
-        )
-      : null;
+    let conversation =
+      command.message.conversationId &&
+      ObjectId.isValid(command.message.conversationId)
+        ? await this.emailSessionRegistryService.getEmailConversationById(
+            command.message.conversationId,
+          )
+        : null;
     if (!conversation) {
       conversation =
         await this.emailSessionManagerService.createEmailConversation(
@@ -63,8 +66,18 @@ export class SendEmailCommandHandler
       );
 
     // add conversationId to subject
-    if (!subjectConversationId) {
-      sendEmailRequest.message.subject = `#${command.message.conversationId.toUpperCase()} - ${
+    if (subjectConversationId && ObjectId.isValid(subjectConversationId)) {
+      conversation =
+        await this.emailSessionRegistryService.getEmailConversationById(
+          command.message.conversationId,
+        );
+      if (String(conversation.id) !== subjectConversationId) {
+        sendEmailRequest.message.subject = `#${conversation.id.toUpperCase()} - ${
+          sendEmailRequest.message.subject
+        }`;
+      }
+    } else {
+      sendEmailRequest.message.subject = `#${conversation.id.toUpperCase()} - ${
         sendEmailRequest.message.subject
       }`;
     }

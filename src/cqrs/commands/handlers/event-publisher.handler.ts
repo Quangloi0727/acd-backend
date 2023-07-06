@@ -16,9 +16,7 @@ export class EventPublisherCommandHandler
   async execute(command: EventPublisherCommand): Promise<boolean> {
     this.logger.debug(
       EventPublisherCommandHandler,
-      `event publisher request: ${JSON.stringify(command.data)} to topic: ${
-        command.topic
-      }`,
+      `event publisher to topic: ${command.topic}`,
     );
     try {
       await this.kafkaService.send(command.data, command.topic);
