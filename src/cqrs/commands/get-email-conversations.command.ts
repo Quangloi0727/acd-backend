@@ -6,6 +6,10 @@ export class GetEmailConversationsCommand implements ICommand {
     public agentId: string,
     public onlySpam: boolean,
     public onlyUnread: boolean,
-    public row: number,
+    public skip: number,
+    public take: number,
+    public emails: string,
+    public fromDate: Date,
+    public toDate: Date,
   ) {}
 }
