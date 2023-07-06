@@ -13,6 +13,7 @@ import {
 import { MarkAsReadDto, MarkAsSpamDto, MarkAsUnreadDto } from './dtos';
 import { SendEmailDto } from './dtos/send-email.dto';
 import { AssignEmailDto } from './dtos/assign-email.dto';
+import { EmailConversationDocument } from '../schemas';
 
 @Controller('email')
 export class EmailManagerApiController {
@@ -29,17 +30,30 @@ export class EmailManagerApiController {
     @Query('userIds') ids: string,
     @Query('onlySpam') onlySpam: string,
     @Query('onlyUnread') onlyUnread: string,
-    @Query('row') row: number,
+    @Query('skip') skip: number,
+    @Query('take') take: number,
+    @Query('emails') emails: string,
+    @Query('fromdate') fromdate: string,
+    @Query('todate') todate: string,
   ) {
-    return this.commandBus.execute(
+    const [result, total] = await this.commandBus.execute(
       new GetEmailConversationsCommand(
         query,
         ids,
         onlySpam == 'true' ? true : false,
         onlyUnread == 'true' ? true : false,
-        Number(row ?? 0) ?? 10,
+        Number(skip ?? 0),
+        Number(take ?? 10),
+        emails,
+        fromdate ? new Date(Date.parse(fromdate)) : new Date(0),
+        todate ? new Date(Date.parse(todate)) : new Date(),
       ),
     );
+
+    return {
+      data: result,
+      total: total,
+    };
   }
 
   @Get('/detail')
