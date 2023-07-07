@@ -13,6 +13,8 @@ import {
   EmailConversation,
   EmailConversationSchema,
   EmailSchema,
+  EmailSpam,
+  EmailSpamSchema,
   Message,
   MessageSchema,
   Participant,
@@ -43,6 +45,9 @@ import {
   MarkEmailAsReadCommandHandler,
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
+  AssignAgentToConversationCommandHandler,
+  NotifyNewEmailToAgentCommandHandler,
+  EventPublisherCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -52,6 +57,7 @@ import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
+  GetConversationByIdQueryHandler
 } from './queries';
 import { EmailSessionManagerModule } from 'src/email-session-manager';
 import { EmailSessionRegistryModule } from 'src/email-session-registry';
@@ -68,6 +74,7 @@ const handlers = [
   FindBySenderCommandHandler,
   MessageReceivedEventHandler,
   ChatHistoryQueryHandler,
+  GetConversationByIdQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
   CountConversationOpenCommandHandler,
@@ -85,6 +92,9 @@ const handlers = [
   MarkEmailAsReadCommandHandler,
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
+  AssignAgentToConversationCommandHandler,
+  NotifyNewEmailToAgentCommandHandler,
+  EventPublisherCommandHandler,
 ];
 
 @Module({
@@ -102,6 +112,7 @@ const handlers = [
       { name: Participant.name, schema: ParticipantSchema },
       { name: Email.name, schema: EmailSchema },
       { name: EmailConversation.name, schema: EmailConversationSchema },
+      { name: EmailSpam.name, schema: EmailSpamSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,

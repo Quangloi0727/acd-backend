@@ -1,11 +1,11 @@
 export interface Attachment {
-  id: string;
   name: string;
   size: number;
   ctime: number;
   relPath: string;
   absPath: string;
   inline: boolean;
+  cid: string;
 }
 
 export interface EmailDto {

@@ -20,3 +20,6 @@ export * from './get-email-detail.handler';
 export * from './mark-email-as-read.handler';
 export * from './mark-email-as-unread.handler';
 export * from './mark-email-as-spam.handler';
+export * from './assign-agent-to-conversation.handler';
+export * from './notify-new-email-to-agent.handler';
+export * from './event-publisher.handler';

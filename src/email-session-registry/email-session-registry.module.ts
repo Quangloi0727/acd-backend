@@ -5,6 +5,8 @@ import {
   EmailConversation,
   EmailConversationSchema,
   EmailSchema,
+  EmailSpam,
+  EmailSpamSchema,
 } from '../schemas';
 import { LoggingModule } from '../providers/logging';
 import { EmailSessionRegistryService } from './email-session-registry.service';
@@ -15,6 +17,7 @@ import { GrpcModule } from '../providers/grpc/grpc.module';
     MongooseModule.forFeature([
       { name: Email.name, schema: EmailSchema },
       { name: EmailConversation.name, schema: EmailConversationSchema },
+      { name: EmailSpam.name, schema: EmailSpamSchema },
     ]),
     GrpcModule,
     LoggingModule,

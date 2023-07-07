@@ -23,6 +23,7 @@ import {
   TransferConversationCommand,
   JoinConversationCommand,
   LeaveConversationCommand,
+  GetConversationByIdQuery
 } from '../cqrs';
 import {
   SendMessageDto,
@@ -42,6 +43,11 @@ export class ConversationManagerApiController {
   @Get('/histories/:id')
   async getConversationHistories(@Param('id') id: string) {
     return await this.queryBus.execute(new ChatHistoryQuery(id));
+  }
+
+  @Get('/detail/:id')
+  async getDetailConversation(@Param('id') id: string) {
+    return await this.queryBus.execute(new GetConversationByIdQuery(id));
   }
 
   @Post('/send')

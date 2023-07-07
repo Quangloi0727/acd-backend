@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -6,12 +6,20 @@ import {
   EmailConversation,
   EmailConversationDocument,
 } from '../schemas';
+import { lastValueFrom } from 'rxjs';
+import { EmailConnectorClient } from '../providers/grpc/grpc.module';
+import {
+  EmailServiceClient,
+  SendEmailRequest,
+} from '../protos/email-connector.pb';
 
 @Injectable()
 export class EmailSessionManagerService {
   constructor(
     @InjectModel(EmailConversation.name)
     private readonly model: Model<EmailConversationDocument>,
+    @Inject(EmailConnectorClient)
+    private emailConnectorClient: EmailServiceClient,
   ) {}
   async createEmailConversation(
     email: Email,
@@ -25,6 +33,15 @@ export class EmailSessionManagerService {
       ToEmail: email.ToEmail,
       CcEmail: email.CcEmail,
       BccEmail: email.BccEmail,
+      Subject: email.Subject,
     });
+  }
+
+  async sendEmail(request: SendEmailRequest) {
+    try {
+      return lastValueFrom(this.emailConnectorClient.sendEmail(request));
+    } catch (e) {
+      return null;
+    }
   }
 }

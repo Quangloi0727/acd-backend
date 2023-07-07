@@ -1,9 +1,15 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { TransferConversationCommand } from '../transfer-conversation.command';
 import { LoggingService } from '../../../providers/logging';
-import { NotifyEventType, ParticipantType } from '../../../common/enums';
+import {
+  KAFKA_TOPIC_MONITOR,
+  NotifyEventType,
+  ParticipantType,
+} from '../../../common/enums';
 import { NotifyNewMessageToAgentCommand } from '../notify-new-message-to-agent.command';
 import { ChatSessionSupervisingService } from '../../../chat-session-supervising';
+import { Inject } from '@nestjs/common';
+import { KafkaClientService, KafkaService } from '../../../providers/kafka';
 
 @CommandHandler(TransferConversationCommand)
 export class TransferConversationCommandHandler
@@ -13,6 +19,8 @@ export class TransferConversationCommandHandler
     private readonly chatSessionSupervisingService: ChatSessionSupervisingService,
     private readonly loggingService: LoggingService,
     private readonly commandBus: CommandBus,
+    @Inject(KafkaClientService)
+    private kafkaService: KafkaService,
   ) {}
 
   async execute(command: TransferConversationCommand): Promise<any> {
@@ -45,6 +53,12 @@ export class TransferConversationCommandHandler
         rooms.join(','),
         data,
       ),
+    );
+
+    // send kafka event transfer conversation
+    await this.kafkaService.send(
+      data,
+      KAFKA_TOPIC_MONITOR.CONVERSATION_MESSAGE_TRANSFER,
     );
     return {
       statusCode: 200,

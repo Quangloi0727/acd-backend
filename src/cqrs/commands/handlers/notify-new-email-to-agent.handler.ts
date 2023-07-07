@@ -1,16 +1,16 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HttpService } from '@nestjs/axios';
-import { NotifyNewMessageToAgentCommand } from '../notify-new-message-to-agent.command';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import { LoggingService } from '../../../providers/logging';
 import { NotificationServerApiBaseResponse } from '../../../common/base/notify-server-base-response';
+import { NotifyNewEmailToAgentCommand } from '../notify-new-email-to-agent.command';
 
-@CommandHandler(NotifyNewMessageToAgentCommand)
-export class NotifyNewMessageToAgentCommandHandler
+@CommandHandler(NotifyNewEmailToAgentCommand)
+export class NotifyNewEmailToAgentCommandHandler
   implements
     ICommandHandler<
-      NotifyNewMessageToAgentCommand,
+      NotifyNewEmailToAgentCommand,
       NotificationServerApiBaseResponse
     >
 {
@@ -19,15 +19,19 @@ export class NotifyNewMessageToAgentCommandHandler
     private readonly logger: LoggingService,
   ) {}
   async execute(
-    command: NotifyNewMessageToAgentCommand,
+    command: NotifyNewEmailToAgentCommand,
   ): Promise<NotificationServerApiBaseResponse> {
-    const base_url = process.env.NOTIFICATION_SERVER_URL || 'http://localhost:3000';
+    this.logger.debug(
+      NotifyNewEmailToAgentCommandHandler,
+      `notify request: ${JSON.stringify(command.data)}`,
+    );
+    const base_url = process.env.NOTIFICATION_SERVER_URL || 'localhost:3000';
     try {
       const { data } = await firstValueFrom(
         this.httpService
           .post<NotificationServerApiBaseResponse>(
-            `${base_url}/notification/new`,
-            command,
+            `${base_url}/notification/jobProcessCompleted`,
+            command.data,
             {
               headers: { 'Content-Type': 'application/json' },
             },
@@ -35,7 +39,7 @@ export class NotifyNewMessageToAgentCommandHandler
           .pipe(
             catchError((error: AxiosError) => {
               this.logger.error(
-                NotifyNewMessageToAgentCommandHandler,
+                NotifyNewEmailToAgentCommandHandler,
                 error.message,
               );
               throw new Error(error.message);
