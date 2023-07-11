@@ -7,6 +7,7 @@ export * from './pick-conversation.command';
 export * from './close-conversation.command';
 export * from './reopen-conversation.command';
 export * from './findByChannelsAndStates.command';
+export * from './countByChannelsAndStates.command';
 export * from './findBySender.command';
 export * from './count-conversation-open.command';
 export * from './join-conversation.command';
