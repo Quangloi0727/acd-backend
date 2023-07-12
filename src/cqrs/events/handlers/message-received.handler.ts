@@ -79,7 +79,7 @@ export class MessageReceivedEventHandler
       conversationCreated.lastMessage = messageDocument['_id']
       conversationCreated.messages.push(messageDocument['_id'])
 
-      checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, null)
+      checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, null, false)
 
       message['conversation'] = conversationCreated.toObject()
       message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
@@ -100,7 +100,7 @@ export class MessageReceivedEventHandler
         conversationDocument.lastTime = new Date()
         conversationDocument.lastMessage = messageDocument['_id']
 
-        checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, conversationDocument.agentPicked)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, conversationDocument.agentPicked, false)
 
         rooms = [`${message.cloudTenantId}_${message.applicationId}`]
 
@@ -119,7 +119,7 @@ export class MessageReceivedEventHandler
         conversationDocument.lastMessage = messageDocument['_id']
         conversationDocument.save()
         // set room
-        for (const item of conversationDocument.participants){
+        for (const item of conversationDocument.participants) {
           rooms.push(
             `${item}_${message.cloudTenantId}_${message.applicationId}`,
           )
@@ -148,7 +148,7 @@ export class MessageReceivedEventHandler
         conversationCreated.lastMessage = messageDocument['_id']
         conversationCreated.messages.push(messageDocument['_id'])
 
-        checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, conversationDocument.agentPicked)
+        checkAgentAssigned = await this.requestGetAgentOnline(conversationCreated, checkAgentAssigned, rooms, messageDocument, conversationDocument.agentPicked, true)
 
         message['conversation'] = conversationCreated.toObject()
         message['conversationState'] = checkAgentAssigned ? ConversationState.INTERACTIVE : ConversationState.OPEN
@@ -188,7 +188,7 @@ export class MessageReceivedEventHandler
     )
   }
 
-  private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, lastAgentId) {
+  private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, lastAgentId, checkNotify) {
     const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId, lastAgentId)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
@@ -200,8 +200,10 @@ export class MessageReceivedEventHandler
       rooms.push(
         `${responseAssign.agentId}_${message.cloudTenantId}_${message.applicationId}`,
       )
-      // case này dành cho trường hợp refresh tab đã đóng ở toàn bộ các agent khi có 1 tin nhắn mới đến mà được phân cho agent đang online
-      await this.notifyToAgent([`${message.cloudTenantId}_${message.applicationId}`], NotifyEventType.MESSAGE_REFRESH_FRONTEND, message)
+      if (checkNotify == true) {
+        // case này dành cho trường hợp refresh tab đã đóng ở toàn bộ các agent khi có 1 tin nhắn mới đến mà được phân cho agent đang online
+        await this.notifyToAgent([`${message.cloudTenantId}_${message.applicationId}`], NotifyEventType.MESSAGE_REFRESH_FRONTEND, message)
+      }
     } else {
       rooms.push(
         `${message.cloudTenantId}_${message.applicationId}`
