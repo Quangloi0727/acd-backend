@@ -1,8 +1,9 @@
 import { Body, Controller, Post } from "@nestjs/common"
 import { CommandBus } from "@nestjs/cqrs"
-import { FindByChannelsAndStatesCommand, FindBySenderCommand } from "../cqrs"
+import { CountByChannelsAndStatesCommand, FindByChannelsAndStatesCommand, FindBySenderCommand } from "../cqrs"
 import { FindByChannelsAndStatesDto } from "./dtos/findByChannelsAndStates.dto"
 import { FindBySenderDto } from "./dtos/findBySender.dto"
+import { CountByChannelsAndStatesDto } from "./dtos/countByChannelsAndStates.dto"
 
 @Controller('')
 export class ChatSessionManagerApiController {

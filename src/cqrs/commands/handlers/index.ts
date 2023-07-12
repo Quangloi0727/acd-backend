@@ -6,6 +6,7 @@ export * from './pick-conversation.handler';
 export * from './close-conversation.handler';
 export * from './reopen-conversation.handler';
 export * from './findByChannelsAndStates.handler';
+export * from './countByChannelsAndStates.handler';
 export * from './findBySender.handler';
 export * from './count-conversation-open.handler';
 export * from './join-conversation.handler';
