@@ -35,6 +35,8 @@ export class SendMessageCommandHandler
       let response: any
       if (channel == ChannelType.ZL_MESSAGE) {
         response = await this.chatSessionManagerService.requestSendMessageToZaloConnector(command)
+      } else if (channel == ChannelType.WS_MESSAGE){
+        response = await this.chatSessionManagerService.requestSendMessageToWSConnector(command)
       } else {
         response = await this.chatSessionManagerService.requestSendMessageToFacebookConnector(command)
       }
@@ -74,7 +76,7 @@ export class SendMessageCommandHandler
       return {
         statusCode: 500,
         success: false,
-        description: error.details
+        description: error.message
       }
     }
   }

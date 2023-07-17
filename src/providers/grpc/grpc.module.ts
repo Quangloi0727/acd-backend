@@ -22,12 +22,15 @@ import {
   EMAIL_SERVICE_NAME,
 } from '../../protos/email-connector.pb';
 import { emailClientOptions } from './email-connector-client.option';
+import { WHAT_SAPP_CONNECTOR_SERVICE_NAME, WhatSappConnectorServiceClient } from 'src/protos/ws-connector.pb'
+import { wsConnectorClientOptions } from './ws-connector-client.options'
 
 export const AssignmentClient = Symbol('ASSIGNMENT');
 export const AsmClient = Symbol('ASM');
 export const ZaloConnectorClient = Symbol('ZALOCONNECTOR');
 export const FacebookConnectorClient = Symbol('FACEBOOKCONNECTOR');
 export const EmailConnectorClient = Symbol('EMAIL_CONNECTOR');
+export const WSConnectorClient = Symbol('WS_CONNECTOR');
 
 const assignmentClientFactory = {
   provide: AssignmentClient,
@@ -75,6 +78,14 @@ const emailConnectorClientFactory = {
   inject: [EMAIL_SERVICE_NAME],
 };
 
+const wsConnectorClientFactory = {
+  provide: WSConnectorClient,
+  useFactory: (client: ClientGrpc) => {
+    return client.getService<WhatSappConnectorServiceClient>(WHAT_SAPP_CONNECTOR_SERVICE_NAME);
+  },
+  inject: [WHAT_SAPP_CONNECTOR_SERVICE_NAME],
+};
+
 @Global()
 @Module({
   imports: [
@@ -99,6 +110,10 @@ const emailConnectorClientFactory = {
         name: EMAIL_SERVICE_NAME,
         ...emailClientOptions,
       },
+      {
+        name: WHAT_SAPP_CONNECTOR_SERVICE_NAME,
+        ...wsConnectorClientOptions,
+      },
     ]),
   ],
   providers: [
@@ -107,6 +122,7 @@ const emailConnectorClientFactory = {
     zaloConnectorClientFactory,
     facebookConnectorClientFactory,
     emailConnectorClientFactory,
+    wsConnectorClientFactory
   ],
   exports: [
     AssignmentClient,
@@ -114,6 +130,7 @@ const emailConnectorClientFactory = {
     ZaloConnectorClient,
     FacebookConnectorClient,
     EmailConnectorClient,
+    WSConnectorClient
   ],
 })
 export class GrpcModule {}
