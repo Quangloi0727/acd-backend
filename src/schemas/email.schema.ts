@@ -121,14 +121,21 @@ export class Email extends BaseObject<Email> {
 
   static checkAndParseEmailAddress(inputString: string): string {
     if (!inputString) return inputString;
-    const emails = [];
-    for (const e of inputString.split(',')) {
-      const regex = /<([^>]+)>/g;
-      const results = regex.exec(e);
-      if (results && e.includes('<')) emails.push(results[1]);
-      else emails.push(e);
+    const regex = /(?:<([^<>@\s]+@[^<>@\s]+)>|([^<>,\s]+@[^<>,\s]+))/g;
+    const matches = inputString.match(regex);
+
+    if (matches) {
+      return matches
+        .map((match) => {
+          const email = match.trim();
+          return email.startsWith('<') && email.endsWith('>')
+            ? email.slice(1, -1)
+            : email;
+        })
+        .join(','); // Remove "<" and ">" around the email
+    } else {
+      return '';
     }
-    return emails.join(',');
   }
 
   static updateAttatchmentPath(attachments: Attachment[]) {
