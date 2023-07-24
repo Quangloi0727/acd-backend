@@ -29,6 +29,7 @@ export class GetEmailConversationsCommandHandler
     const matchQueries: FilterQuery<EmailConversationDocument>[] = [
       { AgentId: { $in: command.agentId.split(',') } },
       { IsDeleted: false },
+      { TenantId: command.tenantId },
       {
         ReceivedTime: {
           $gte: command.fromDate,
