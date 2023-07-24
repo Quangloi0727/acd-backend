@@ -20,12 +20,18 @@ export class EmailManagerApiController {
   constructor(private readonly commandBus: CommandBus) {}
 
   @Get('/stats')
-  async getCountEmailByAgentId(@Query('userIds') ids: string) {
-    return this.commandBus.execute(new CountEmailConversationCommand(ids));
+  async getCountEmailByAgentId(
+    @Query('tenantId') tenantId: string,
+    @Query('userIds') ids: string,
+  ) {
+    return this.commandBus.execute(
+      new CountEmailConversationCommand(Number(tenantId ?? 0) ?? 0, ids),
+    );
   }
 
   @Get('/list')
   async getConversations(
+    @Query('tenantId') tenantId: string,
     @Query('query') query: string,
     @Query('userIds') ids: string,
     @Query('onlySpam') onlySpam: string,
@@ -38,6 +44,7 @@ export class EmailManagerApiController {
   ) {
     const [result, total] = await this.commandBus.execute(
       new GetEmailConversationsCommand(
+        Number(tenantId ?? 0) ?? 0,
         query,
         ids,
         onlySpam == 'true' ? true : false,
