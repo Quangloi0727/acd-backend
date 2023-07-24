@@ -37,6 +37,8 @@ export class SendMessageCommandHandler
         response = await this.chatSessionManagerService.requestSendMessageToZaloConnector(command)
       } else if (channel == ChannelType.WS_MESSAGE){
         response = await this.chatSessionManagerService.requestSendMessageToWSConnector(command)
+      } else if (channel == ChannelType.VB_MESSAGE){
+        response = await this.chatSessionManagerService.requestSendMessageToViberConnector(command)
       } else {
         response = await this.chatSessionManagerService.requestSendMessageToFacebookConnector(command)
       }

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { AssignmentClient, FacebookConnectorClient, WSConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
+import { AssignmentClient, FacebookConnectorClient, ViberConnectorClient, WSConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
 import { AgentAssignmentServiceClient } from '../protos/assignment.pb'
 import { Conversation } from '../schemas/conversation.schema'
 import { ConversationState, ConversationType } from '../common/enums'
@@ -9,6 +9,7 @@ import { ZaloConnectorServiceClient } from '../protos/zalo-connector.pb'
 import { lastValueFrom } from 'rxjs'
 import { FacebookConnectorServiceClient } from '../protos/facebook-connector.pb'
 import { WhatSappConnectorServiceClient } from 'src/protos/ws-connector.pb'
+import { ViberConnectorServiceClient } from 'src/protos/viber-connector.pb'
 
 @Injectable()
 export class ChatSessionManagerService {
@@ -19,6 +20,8 @@ export class ChatSessionManagerService {
     private zaloConnectorService: ZaloConnectorServiceClient,
     @Inject(FacebookConnectorClient)
     private facebookConnectorService: FacebookConnectorServiceClient,
+    @Inject(ViberConnectorClient)
+    private viberConnectorService: ViberConnectorServiceClient,
     @Inject(WSConnectorClient)
     private whatSappConnectorService: WhatSappConnectorServiceClient,
   ) { }
@@ -64,6 +67,10 @@ export class ChatSessionManagerService {
 
   async requestSendMessageToFacebookConnector(command: SendMessageCommand) {
     return lastValueFrom(this.facebookConnectorService.sendMessageToFacebook(command))
+  }
+
+  async requestSendMessageToViberConnector(command: SendMessageCommand) {
+    return lastValueFrom(this.viberConnectorService.sendMessageToViber(command))
   }
 
 }

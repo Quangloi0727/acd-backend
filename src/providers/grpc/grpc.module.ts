@@ -24,6 +24,8 @@ import {
 import { emailClientOptions } from './email-connector-client.option';
 import { WHAT_SAPP_CONNECTOR_SERVICE_NAME, WhatSappConnectorServiceClient } from 'src/protos/ws-connector.pb'
 import { wsConnectorClientOptions } from './ws-connector-client.options'
+import { VIBER_CONNECTOR_SERVICE_NAME, ViberConnectorServiceClient } from 'src/protos/viber-connector.pb'
+import { viberConnectorClientOptions } from './viber-connector-client.option'
 
 export const AssignmentClient = Symbol('ASSIGNMENT');
 export const AsmClient = Symbol('ASM');
@@ -31,6 +33,7 @@ export const ZaloConnectorClient = Symbol('ZALOCONNECTOR');
 export const FacebookConnectorClient = Symbol('FACEBOOKCONNECTOR');
 export const EmailConnectorClient = Symbol('EMAIL_CONNECTOR');
 export const WSConnectorClient = Symbol('WS_CONNECTOR');
+export const ViberConnectorClient = Symbol('VIBER_CONNECTOR');
 
 const assignmentClientFactory = {
   provide: AssignmentClient,
@@ -86,6 +89,14 @@ const wsConnectorClientFactory = {
   inject: [WHAT_SAPP_CONNECTOR_SERVICE_NAME],
 };
 
+const viberConnectorClientFactory = {
+  provide: ViberConnectorClient,
+  useFactory: (client: ClientGrpc) => {
+    return client.getService<ViberConnectorServiceClient>(VIBER_CONNECTOR_SERVICE_NAME);
+  },
+  inject: [VIBER_CONNECTOR_SERVICE_NAME],
+};
+
 @Global()
 @Module({
   imports: [
@@ -114,6 +125,10 @@ const wsConnectorClientFactory = {
         name: WHAT_SAPP_CONNECTOR_SERVICE_NAME,
         ...wsConnectorClientOptions,
       },
+      {
+        name: VIBER_CONNECTOR_SERVICE_NAME,
+        ...viberConnectorClientOptions,
+      },
     ]),
   ],
   providers: [
@@ -122,7 +137,8 @@ const wsConnectorClientFactory = {
     zaloConnectorClientFactory,
     facebookConnectorClientFactory,
     emailConnectorClientFactory,
-    wsConnectorClientFactory
+    wsConnectorClientFactory,
+    viberConnectorClientFactory
   ],
   exports: [
     AssignmentClient,
@@ -130,7 +146,8 @@ const wsConnectorClientFactory = {
     ZaloConnectorClient,
     FacebookConnectorClient,
     EmailConnectorClient,
-    WSConnectorClient
+    WSConnectorClient,
+    ViberConnectorClient
   ],
 })
 export class GrpcModule {}
