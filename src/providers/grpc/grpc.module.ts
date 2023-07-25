@@ -26,6 +26,8 @@ import { WHAT_SAPP_CONNECTOR_SERVICE_NAME, WhatSappConnectorServiceClient } from
 import { wsConnectorClientOptions } from './ws-connector-client.options'
 import { VIBER_CONNECTOR_SERVICE_NAME, ViberConnectorServiceClient } from 'src/protos/viber-connector.pb'
 import { viberConnectorClientOptions } from './viber-connector-client.option'
+import { TELEGRAM_CONNECTOR_SERVICE_NAME, TelegramConnectorServiceClient } from 'src/protos/telegram-connector.pb'
+import { telegramConnectorClientOptions } from './telegram-connector-client.option'
 
 export const AssignmentClient = Symbol('ASSIGNMENT');
 export const AsmClient = Symbol('ASM');
@@ -34,6 +36,7 @@ export const FacebookConnectorClient = Symbol('FACEBOOKCONNECTOR');
 export const EmailConnectorClient = Symbol('EMAIL_CONNECTOR');
 export const WSConnectorClient = Symbol('WS_CONNECTOR');
 export const ViberConnectorClient = Symbol('VIBER_CONNECTOR');
+export const TelegramConnectorClient = Symbol('TELEGRAM_CONNECTOR');
 
 const assignmentClientFactory = {
   provide: AssignmentClient,
@@ -97,6 +100,14 @@ const viberConnectorClientFactory = {
   inject: [VIBER_CONNECTOR_SERVICE_NAME],
 };
 
+const telegramConnectorClientFactory = {
+  provide: TelegramConnectorClient,
+  useFactory: (client: ClientGrpc) => {
+    return client.getService<TelegramConnectorServiceClient>(TELEGRAM_CONNECTOR_SERVICE_NAME);
+  },
+  inject: [TELEGRAM_CONNECTOR_SERVICE_NAME],
+};
+
 @Global()
 @Module({
   imports: [
@@ -129,6 +140,10 @@ const viberConnectorClientFactory = {
         name: VIBER_CONNECTOR_SERVICE_NAME,
         ...viberConnectorClientOptions,
       },
+      {
+        name: TELEGRAM_CONNECTOR_SERVICE_NAME,
+        ...telegramConnectorClientOptions,
+      },
     ]),
   ],
   providers: [
@@ -138,7 +153,8 @@ const viberConnectorClientFactory = {
     facebookConnectorClientFactory,
     emailConnectorClientFactory,
     wsConnectorClientFactory,
-    viberConnectorClientFactory
+    viberConnectorClientFactory,
+    telegramConnectorClientFactory
   ],
   exports: [
     AssignmentClient,
@@ -147,7 +163,8 @@ const viberConnectorClientFactory = {
     FacebookConnectorClient,
     EmailConnectorClient,
     WSConnectorClient,
-    ViberConnectorClient
+    ViberConnectorClient,
+    TelegramConnectorClient
   ],
 })
 export class GrpcModule {}
