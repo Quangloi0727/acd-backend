@@ -3,6 +3,7 @@ export enum ChannelType {
   WS_MESSAGE = 'WS_MESSAGE',
   FB_MESSAGE = 'FB_MESSAGE',
   VB_MESSAGE = 'VB_MESSAGE',
+  TLG_MESSAGE = 'TLG_MESSAGE',
   FB_PAGE = 'FB_PAGE',
   ZL_PAGE = 'ZL_PAGE',
   LIVE_CHAT = 'LIVE_CHAT',

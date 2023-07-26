@@ -35,10 +35,12 @@ export class SendMessageCommandHandler
       let response: any
       if (channel == ChannelType.ZL_MESSAGE) {
         response = await this.chatSessionManagerService.requestSendMessageToZaloConnector(command)
-      } else if (channel == ChannelType.WS_MESSAGE){
+      } else if (channel == ChannelType.WS_MESSAGE) {
         response = await this.chatSessionManagerService.requestSendMessageToWSConnector(command)
-      } else if (channel == ChannelType.VB_MESSAGE){
+      } else if (channel == ChannelType.VB_MESSAGE) {
         response = await this.chatSessionManagerService.requestSendMessageToViberConnector(command)
+      } else if (channel == ChannelType.TLG_MESSAGE) {
+        response = await this.chatSessionManagerService.requestSendMessageToTelegramConnector(command)
       } else {
         response = await this.chatSessionManagerService.requestSendMessageToFacebookConnector(command)
       }
