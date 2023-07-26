@@ -1,5 +1,5 @@
 import { Controller, Inject, OnModuleInit } from '@nestjs/common';
-import { EventBus } from '@nestjs/cqrs';
+import { CommandBus } from '@nestjs/cqrs';
 import {
   KafkaClientService,
   KafkaService,
@@ -12,7 +12,7 @@ import { MessageReceivedEvent } from '../cqrs';
 @Controller()
 export class MessageConsumerController implements OnModuleInit {
   constructor(
-    private readonly eventBus: EventBus,
+    private readonly commandBus: CommandBus,
     @Inject(KafkaClientService)
     private kafkaService: KafkaService,
   ) {}
@@ -26,6 +26,6 @@ export class MessageConsumerController implements OnModuleInit {
 
   @SubscribeTo(KAFKA_TOPIC.CONNECTOR_MESSAGE_RECEIVED)
   async onMessageReceived(data: MessageDto): Promise<void> {
-    this.eventBus.publish(new MessageReceivedEvent(data));
+    await this.commandBus.execute(new MessageReceivedEvent(data));
   }
 }

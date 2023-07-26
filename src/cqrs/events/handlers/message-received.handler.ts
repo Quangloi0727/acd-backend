@@ -1,8 +1,8 @@
 import {
-  IEventHandler,
-  EventsHandler,
   CommandBus,
   QueryBus,
+  CommandHandler,
+  ICommandHandler,
 } from '@nestjs/cqrs'
 import { MessageReceivedEvent } from '../message-received.event'
 import { LoggingService } from '../../../providers/logging'
@@ -24,9 +24,9 @@ import { Message, Tenant } from '../../../schemas'
 import { Inject } from '@nestjs/common'
 import { KafkaClientService, KafkaService } from '../../../providers/kafka'
 
-@EventsHandler(MessageReceivedEvent)
+@CommandHandler(MessageReceivedEvent)
 export class MessageReceivedEventHandler
-  implements IEventHandler<MessageReceivedEvent>
+  implements ICommandHandler<MessageReceivedEvent>
 {
   constructor(
     private readonly loggingService: LoggingService,
@@ -38,7 +38,7 @@ export class MessageReceivedEventHandler
     private kafkaService: KafkaService
   ) { }
 
-  async handle(event: MessageReceivedEvent) {
+  async execute(event: MessageReceivedEvent) {
     await this.loggingService.debug(MessageReceivedEventHandler, `Received a message from kafka: ${JSON.stringify(event)}`)
     await this.loggingService.info(MessageReceivedEventHandler, `Received a message from kafka,messageId: ${JSON.stringify(event?.message?.messageId)}`)
 
@@ -101,8 +101,6 @@ export class MessageReceivedEventHandler
         conversationDocument.lastMessage = messageDocument['_id']
 
         checkAgentAssigned = await this.requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, conversationDocument.agentPicked, false)
-
-        rooms = [`${message.cloudTenantId}_${message.applicationId}`]
 
         message['conversation'] = conversationDocument.toObject()
         message['lastMessage'] = {
