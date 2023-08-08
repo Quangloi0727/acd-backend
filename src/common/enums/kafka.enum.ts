@@ -1,7 +1,9 @@
-export const enum KAFKA_TOPIC {
-  CONNECTOR_MESSAGE_RECEIVED = 'ACD.Message.Received',
-  NOTIFY_NEW_MESSAGE = 'test',
-  NEW_EMAIL_RECEIVED = 'ACD.Email.NewEmail',
+export class KAFKA_TOPIC {
+  static CONNECTOR_MESSAGE_RECEIVED =
+    process.env.TOPIC_NEW_MESSAGE_RECEIVED || 'ACD.Message.Received';
+  static NOTIFY_NEW_MESSAGE = 'test';
+  static NEW_EMAIL_RECEIVED =
+    process.env.TOPIC_NEW_EMAIL_RECEIVED || 'ACD.Email.NewEmail';
 }
 
 export const enum KAFKA_TOPIC_MONITOR {
