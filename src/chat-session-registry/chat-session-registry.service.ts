@@ -43,7 +43,7 @@ export class ChatSessionRegistryService {
   async saveMessage(data) {
     await this.loggingService.debug(ChatSessionRegistryService, `Data receive from grpc to insert table message : ${JSON.stringify(data)}`)
     const { conversationId, cloudAgentId, messageType, text, attachment } = data
-    const findInfoConver = await this.model.findOne({ _id: conversationId }).lean()
+    const findInfoConver = await this.model.findOne({ _id: conversationId }).lean().exec()
     if (!findInfoConver) throw new BadRequestException("Not find conversationId !")
     const message = new Message({
       channel: ChannelType.ZL_MESSAGE,
@@ -67,7 +67,7 @@ export class ChatSessionRegistryService {
       }
     })
     const messageCreated = await this.messageModel.create(message)
-    await this.model.findByIdAndUpdate(conversationId, { $push: { messages: messageCreated['_id'] }, lastMessage: messageCreated['_id'] })
+    await this.model.findByIdAndUpdate(conversationId, { $push: { messages: messageCreated['_id'] }, lastMessage: messageCreated['_id'], isReply:true }).exec()
     messageCreated['conversationId'] = conversationId
     return messageCreated
   }

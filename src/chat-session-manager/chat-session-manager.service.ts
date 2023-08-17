@@ -44,7 +44,7 @@ export class ChatSessionManagerService {
     })
   }
 
-  async assignAgentToSession(conversationId: string, tenantId: number, applicationId: string, lastAgentId: any) {
+  async assignAgentToSession(conversationId: string, tenantId: number, applicationId: string, lastAgentId: any, agentIgnore: any) {
     try {
       const availableAgentId = await lastValueFrom(
         this.agentAssignmentServiceClient.assignAgentToConversation({
@@ -52,7 +52,8 @@ export class ChatSessionManagerService {
           tenantId: tenantId,
           applicationId: applicationId,
           type: ConversationType.CHAT,
-          lastAgentId: lastAgentId
+          lastAgentId: lastAgentId,
+          agentIgnore: agentIgnore
         }))
       return availableAgentId
     } catch (error) {
