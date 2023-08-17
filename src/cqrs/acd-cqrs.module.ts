@@ -63,6 +63,7 @@ import {
 import { EmailSessionManagerModule } from 'src/email-session-manager';
 import { EmailSessionRegistryModule } from 'src/email-session-registry';
 import { EmailSessionSupervisingModule } from 'src/email-session-supervising';
+import { ChatSessionTrackerModule } from 'src/chat-session-tracker'
 
 const handlers = [
   SaveMessageCommandHandler,
@@ -115,10 +116,12 @@ const handlers = [
       { name: Email.name, schema: EmailSchema },
       { name: EmailConversation.name, schema: EmailConversationSchema },
       { name: EmailSpam.name, schema: EmailSpamSchema },
+      { name: Tenant.name, schema: TenantSchema },
     ]),
     ChatSessionManagerModule,
     ChatSessionRegistryModule,
     ChatSessionSupervisingModule,
+    ChatSessionTrackerModule,
     EmailSessionManagerModule,
     EmailSessionRegistryModule,
     EmailSessionSupervisingModule,

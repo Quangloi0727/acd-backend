@@ -9,25 +9,36 @@ export interface getListAgentByAppIdRequest {
   applicationId: string;
 }
 
-export interface getListAgentByAppIdResponse {
+export interface getListAgentByIdAgentGroupInCrmRequest {
+  tenantId: number;
+  idAgentGroupInCrm: number[];
+}
+
+export interface getListAgentResponse {
   agentIds: number[];
 }
 
 export const COM_METECH_ACD_PACKAGE_NAME = "com.metech.acd";
 
 export interface SocialConfigurationServiceClient {
-  getListAgentByAppId(request: getListAgentByAppIdRequest): Observable<getListAgentByAppIdResponse>;
+  getListAgentByAppId(request: getListAgentByAppIdRequest): Observable<getListAgentResponse>;
+
+  getListAgentByIdAgentGroupInCrm(request: getListAgentByIdAgentGroupInCrmRequest): Observable<getListAgentResponse>;
 }
 
 export interface SocialConfigurationServiceController {
   getListAgentByAppId(
     request: getListAgentByAppIdRequest,
-  ): Promise<getListAgentByAppIdResponse> | Observable<getListAgentByAppIdResponse> | getListAgentByAppIdResponse;
+  ): Promise<getListAgentResponse> | Observable<getListAgentResponse> | getListAgentResponse;
+
+  getListAgentByIdAgentGroupInCrm(
+    request: getListAgentByIdAgentGroupInCrmRequest,
+  ): Promise<getListAgentResponse> | Observable<getListAgentResponse> | getListAgentResponse;
 }
 
 export function SocialConfigurationServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getListAgentByAppId"];
+    const grpcMethods: string[] = ["getListAgentByAppId", "getListAgentByIdAgentGroupInCrm"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("SocialConfigurationService", method)(constructor.prototype[method], method, descriptor);
