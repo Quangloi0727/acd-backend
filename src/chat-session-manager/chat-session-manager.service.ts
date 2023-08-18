@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { AssignmentClient, FacebookConnectorClient, WSConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
+import { AssignmentClient, FacebookConnectorClient, TelegramConnectorClient, ViberConnectorClient, WSConnectorClient, ZaloConnectorClient } from '../providers/grpc/grpc.module'
 import { AgentAssignmentServiceClient } from '../protos/assignment.pb'
 import { Conversation } from '../schemas/conversation.schema'
 import { ConversationState, ConversationType } from '../common/enums'
@@ -9,6 +9,8 @@ import { ZaloConnectorServiceClient } from '../protos/zalo-connector.pb'
 import { lastValueFrom } from 'rxjs'
 import { FacebookConnectorServiceClient } from '../protos/facebook-connector.pb'
 import { WhatSappConnectorServiceClient } from 'src/protos/ws-connector.pb'
+import { ViberConnectorServiceClient } from 'src/protos/viber-connector.pb'
+import { TelegramConnectorServiceClient } from 'src/protos/telegram-connector.pb'
 
 @Injectable()
 export class ChatSessionManagerService {
@@ -19,8 +21,12 @@ export class ChatSessionManagerService {
     private zaloConnectorService: ZaloConnectorServiceClient,
     @Inject(FacebookConnectorClient)
     private facebookConnectorService: FacebookConnectorServiceClient,
+    @Inject(ViberConnectorClient)
+    private viberConnectorService: ViberConnectorServiceClient,
     @Inject(WSConnectorClient)
     private whatSappConnectorService: WhatSappConnectorServiceClient,
+    @Inject(TelegramConnectorClient)
+    private telegramConnectorService: TelegramConnectorServiceClient,
   ) { }
 
   async createConversation(message: Message): Promise<Conversation> {
@@ -38,7 +44,7 @@ export class ChatSessionManagerService {
     })
   }
 
-  async assignAgentToSession(conversationId: string, tenantId: number, applicationId: string, lastAgentId: any) {
+  async assignAgentToSession(conversationId: string, tenantId: number, applicationId: string, lastAgentId: any, agentIgnore: any) {
     try {
       const availableAgentId = await lastValueFrom(
         this.agentAssignmentServiceClient.assignAgentToConversation({
@@ -46,7 +52,8 @@ export class ChatSessionManagerService {
           tenantId: tenantId,
           applicationId: applicationId,
           type: ConversationType.CHAT,
-          lastAgentId: lastAgentId
+          lastAgentId: lastAgentId,
+          agentIgnore: agentIgnore
         }))
       return availableAgentId
     } catch (error) {
@@ -64,6 +71,14 @@ export class ChatSessionManagerService {
 
   async requestSendMessageToFacebookConnector(command: SendMessageCommand) {
     return lastValueFrom(this.facebookConnectorService.sendMessageToFacebook(command))
+  }
+
+  async requestSendMessageToViberConnector(command: SendMessageCommand) {
+    return lastValueFrom(this.viberConnectorService.sendMessageToViber(command))
+  }
+
+  async requestSendMessageToTelegramConnector(command: SendMessageCommand) {
+    return lastValueFrom(this.telegramConnectorService.sendMessageToTelegram(command))
   }
 
 }

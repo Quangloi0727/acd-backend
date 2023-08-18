@@ -23,15 +23,16 @@ export class PickConversationCommandHandler implements ICommandHandler<PickConve
     async execute(body) {
         await this.loggingService.debug(PickConversationCommandHandler, `Data receive is: ${JSON.stringify(body.body)}`)
         const { cloudAgentId, conversationId } = body.body
-        const findConversation = await this.model.findById(conversationId).lean()
+        const findConversation = await this.model.findById(conversationId).lean().exec()
         if (!findConversation) throw new BadRequestException("Not find conversation !")
         if (findConversation.conversationState != ConversationState.OPEN) throw new BadRequestException("Conversation has been received !")
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             agentPicked: cloudAgentId,
             conversationState: ConversationState.INTERACTIVE,
             $push: { participants: cloudAgentId },
-            pickConversationTime:new Date()
-        }, { new: true }).lean()
+            pickConversationTime:new Date(),
+            lastTime:new Date(),
+        }, { new: true }).lean().exec()
         const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         const data: any = { ...conversationUpdated }
         data.event = NotifyEventType.PICK_CONVERSATION

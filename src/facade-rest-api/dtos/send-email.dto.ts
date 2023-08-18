@@ -32,7 +32,6 @@ export class SendEmailDto {
 
   @IsString()
   @Type(() => String)
-  @ApiProperty({ required: true })
   subject: string;
 
   @IsString()

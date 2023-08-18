@@ -10,6 +10,7 @@ export interface AssignAgentToConversationRequest {
   applicationId: string;
   type: string;
   lastAgentId: number;
+  agentIgnore: number;
 }
 
 export interface AssignAgentToConversationResponse {

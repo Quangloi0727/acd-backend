@@ -61,7 +61,7 @@ export class Email extends BaseObject<Email> {
   static fromDto(dto: EmailDto) {
     return new Email({
       CreationTime: new Date(),
-      Subject: dto.subject,
+      Subject: dto.subject ?? 'No Subject',
       SenderName: this.getEmailName(dto.from),
       FromEmail: this.checkAndParseEmailAddress(dto.from),
       ToEmail: this.checkAndParseEmailAddress(dto.to),
