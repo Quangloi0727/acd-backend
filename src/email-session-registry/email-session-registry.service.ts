@@ -48,6 +48,7 @@ export class EmailSessionRegistryService {
     applicationId: string,
     tenantId: number,
     lastAgentId: number,
+    agentIgnore: number,
   ) {
     try {
       const availableAgentId = await lastValueFrom(
@@ -57,6 +58,7 @@ export class EmailSessionRegistryService {
           applicationId: applicationId,
           type: ConversationType.EMAIL,
           lastAgentId: lastAgentId,
+          agentIgnore: agentIgnore
         }),
       );
       return availableAgentId;

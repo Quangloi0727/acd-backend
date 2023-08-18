@@ -73,6 +73,7 @@ export class EmailReceivedEventHandler
         conversation.ToEmail,
         conversation.TenantId,
         conversation.AgentId,
+        null
       );
     await this.loggingService.debug(
       EmailReceivedEventHandler,

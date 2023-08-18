@@ -28,7 +28,7 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
         const conversationUpdated = await this.model.findByIdAndUpdate(conversationId, {
             conversationState: ConversationState.CLOSE,
             closedTime: new Date()
-        }, { new: true }).lean().exec()
+        }, { new: true }).populate("lastMessage").lean().exec()
         const rooms = [`${findConversation.cloudTenantId}_${findConversation.applicationId}`]
         const data: any = { ...conversationUpdated }
         data.event = NotifyEventType.CLOSE_CONVERSATION
@@ -68,7 +68,7 @@ export class CloseConversationCommandHandler implements ICommandHandler<CloseCon
                 const conversationUpdatedImplement = await this.model.findByIdAndUpdate(el._id, {
                     conversationState: ConversationState.CLOSE,
                     closedTime: new Date()
-                }, { new: true }).lean().exec()
+                }, { new: true }).populate("lastMessage").lean().exec()
                 const dataImplement: any = { ...conversationUpdatedImplement }
                 dataImplement.event = NotifyEventType.CLOSE_CONVERSATION
                 dataImplement.room = rooms.join(',')

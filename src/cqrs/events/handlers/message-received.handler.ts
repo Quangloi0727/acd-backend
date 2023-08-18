@@ -25,8 +25,7 @@ import { Inject } from '@nestjs/common'
 import { KafkaClientService, KafkaService } from '../../../providers/kafka'
 
 @CommandHandler(MessageReceivedEvent)
-export class MessageReceivedEventHandler
-  implements ICommandHandler<MessageReceivedEvent>
+export class MessageReceivedEventHandler implements ICommandHandler<MessageReceivedEvent>
 {
   constructor(
     private readonly loggingService: LoggingService,
@@ -187,7 +186,7 @@ export class MessageReceivedEventHandler
   }
 
   private async requestGetAgentOnline(conversationDocument, checkAgentAssigned, rooms, message, lastAgentId, checkNotify) {
-    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId, lastAgentId)
+    const responseAssign = await this.chatSessionManagerService.assignAgentToSession(conversationDocument._id, conversationDocument.cloudTenantId, conversationDocument.applicationId, lastAgentId, null)
     // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
     checkAgentAssigned = (responseAssign.code == 2 || responseAssign.code == 14) ? false : true
     await this.loggingService.info(MessageReceivedEventHandler, `response assign agent is: ${responseAssign.agentId}`)

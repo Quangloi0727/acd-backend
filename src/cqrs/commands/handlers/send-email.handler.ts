@@ -26,6 +26,7 @@ export class SendEmailCommandHandler
       SendEmailCommandHandler,
       `SendEmailCommandHandler request from email: ${command.message.email}, to: ${command.message.to}`,
     );
+    command.message.subject = command.message.subject ?? '';
     let conversation =
       command.message.conversationId &&
       ObjectId.isValid(command.message.conversationId)
