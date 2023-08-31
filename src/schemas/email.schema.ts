@@ -128,9 +128,13 @@ export class Email extends BaseObject<Email> {
       return matches
         .map((match) => {
           const email = match.trim();
-          return email.startsWith('<') && email.endsWith('>')
+          return (email.startsWith('<') && email.endsWith('>')) ||
+            (email.startsWith('"') && email.endsWith('"'))
             ? email.slice(1, -1)
             : email;
+        })
+        .filter(function (elem, index, self) {
+          return index === self.indexOf(elem);
         })
         .join(','); // Remove "<" and ">" around the email
     } else {
