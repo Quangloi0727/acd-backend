@@ -25,3 +25,4 @@ export * from './mark-email-as-spam.command';
 export * from './assign-agent-to-conversation.command';
 export * from './notify-new-email-to-agent.command';
 export * from './event-publisher.command';
+export * from './get-chat-conversation-by-id.command';
