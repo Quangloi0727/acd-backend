@@ -24,3 +24,4 @@ export * from './mark-email-as-spam.handler';
 export * from './assign-agent-to-conversation.handler';
 export * from './notify-new-email-to-agent.handler';
 export * from './event-publisher.handler';
+export * from './get-chat-conversation-by-id.handler';

@@ -49,6 +49,7 @@ import {
   AssignAgentToConversationCommandHandler,
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
+  GetChatConversationByIdCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -58,12 +59,12 @@ import {
   ChatHistoryQueryHandler,
   ParticipantQueryHandler,
   TenantByApplicationQueryHandler,
-  GetConversationByIdQueryHandler
+  GetConversationByIdQueryHandler,
 } from './queries';
 import { EmailSessionManagerModule } from 'src/email-session-manager';
 import { EmailSessionRegistryModule } from 'src/email-session-registry';
 import { EmailSessionSupervisingModule } from 'src/email-session-supervising';
-import { ChatSessionTrackerModule } from 'src/chat-session-tracker'
+import { ChatSessionTrackerModule } from 'src/chat-session-tracker';
 
 const handlers = [
   SaveMessageCommandHandler,
@@ -98,6 +99,7 @@ const handlers = [
   AssignAgentToConversationCommandHandler,
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
+  GetChatConversationByIdCommandHandler,
 ];
 
 @Module({
