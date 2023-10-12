@@ -17,7 +17,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
     async execute(body) {
         const data = body.body
         await this.loggingService.debug(FindByChannelsAndStatesCommandHandler, `Data receive is: ${JSON.stringify(data)}`)
-        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize, filterText } = data
+        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize, filterText, sortAsc } = data
         const skip = (currentPage - 1) * pageSize
         const _query: any = {
             applicationId: { $in: applicationIds },
@@ -72,7 +72,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
-            { $sort: { "lastMessage.receivedTime": -1 } }
+            { $sort: { "lastMessage.receivedTime": sortAsc === true ? 1 : -1 } }
         ])
 
         const total = this.model.aggregate([
