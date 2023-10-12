@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class FindByChannelsAndStatesDto {
     @IsArray()
@@ -26,4 +26,8 @@ export class FindByChannelsAndStatesDto {
     @IsString()
     @IsOptional()
     filterText: string
+
+    @IsBoolean()
+    @IsOptional()
+    sortAsc: boolean
 }
