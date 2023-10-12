@@ -60,7 +60,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: _queryImplement },
-            { $sort: { startedTime: sortAsc == true ? 1 : -1 } },
+            { $sort: { startedTime: -1 } },
             { $skip: skip },
             { $limit: pageSize },
             {
@@ -72,7 +72,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
-            { $sort: { "lastMessage.receivedTime": -1 } }
+            { $sort: { "lastMessage.receivedTime": sortAsc === true ? 1 : -1 } }
         ])
 
         const total = this.model.aggregate([
