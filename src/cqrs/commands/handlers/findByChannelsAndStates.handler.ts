@@ -60,7 +60,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: _queryImplement },
-            { $sort: { startedTime: sortAsc == true ? 1 : -1 } },
+            { $sort: { startedTime: sortAsc === true ? 1 : -1 } },
             { $skip: skip },
             { $limit: pageSize },
             {
