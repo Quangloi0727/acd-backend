@@ -22,19 +22,6 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
             cloudTenantId: tenantId
         }
         const Open = this.model.aggregate([
-            { $sort: { startedTime: 1 } },
-            {
-                $group: {
-                    _id: {
-                        senderId: "$senderId",
-                        applicationId: "$applicationId"
-                    },
-                    channel: { $last: "$channel" },
-                    cloudTenantId: { $last: "$cloudTenantId" },
-                    applicationId: { $last: "$applicationId" },
-                    conversationState: { $last: "$conversationState" }
-                }
-            },
             { $match: { ..._query, conversationState: ConversationState.OPEN } },
             {
                 $count: "totalCount"
@@ -42,20 +29,6 @@ export class CountConversationOpenCommandHandler implements ICommandHandler<Coun
         ])
 
         const Interactive = this.model.aggregate([
-            { $sort: { startedTime: 1 } },
-            {
-                $group: {
-                    _id: {
-                        senderId: "$senderId",
-                        applicationId: "$applicationId"
-                    },
-                    channel: { $last: "$channel" },
-                    cloudTenantId: { $last: "$cloudTenantId" },
-                    applicationId: { $last: "$applicationId" },
-                    conversationState: { $last: "$conversationState" },
-                    agentPicked: { $last: "$agentPicked" }
-                }
-            },
             { $match: { ..._query, agentPicked: agentId, conversationState: ConversationState.INTERACTIVE } },
             {
                 $count: "totalCount"
