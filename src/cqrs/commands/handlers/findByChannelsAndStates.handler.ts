@@ -60,7 +60,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                 }
             },
             { $match: _queryImplement },
-            { $sort: { startedTime: -1 } },
+            { $sort: { startedTime: sortAsc === true ? 1 : -1 } },
             { $skip: skip },
             { $limit: pageSize },
             {
@@ -71,31 +71,11 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     as: "lastMessage"
                 }
             },
-            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
-            { $sort: { "lastMessage.receivedTime": sortAsc === true ? 1 : -1 } }
+            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } }
         ])
 
         const total = this.model.aggregate([
             { $match: _query },
-            {
-                $group: {
-                    _id: {
-                        senderId: "$senderId",
-                        applicationId: "$applicationId"
-                    },
-                    senderName: { $last: "$senderName" },
-                    conversationId: { $last: "$_id" },
-                    senderId: { $last: "$senderId" },
-                    applicationId: { $last: "$applicationId" },
-                    applicationName: { $last: "$applicationName" },
-                    channel: { $last: "$channel" },
-                    cloudTenantId: { $last: "$cloudTenantId" },
-                    conversationState: { $last: "$conversationState" },
-                    lastMessage: { $last: "$lastMessage" },
-                    agentPicked: { $last: "$agentPicked" },
-                    participants: { $last: "$participants" }
-                }
-            },
             { $match: _queryImplement },
             {
                 $count: "totalCount"
