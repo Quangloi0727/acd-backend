@@ -27,7 +27,11 @@ export class FindByChannelsAndStatesDto {
     @IsOptional()
     filterText: string
 
-    @IsBoolean()
+    @IsArray()
     @IsOptional()
-    sortAsc: boolean
+    sortAsc: string[]
+
+    @IsArray()
+    @IsOptional()
+    sortDesc: string[]
 }
