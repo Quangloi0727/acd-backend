@@ -34,9 +34,7 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
         }
         if (Object.keys(_sortQuery).length === 0) 
         {
-            _sortQuery = {
-                startedTime: -1 
-            }
+            _sortQuery["startedTime"] = -1 
         }
 
         const _query: any = {
