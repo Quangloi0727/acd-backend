@@ -17,8 +17,28 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
     async execute(body) {
         const data = body.body
         await this.loggingService.debug(FindByChannelsAndStatesCommandHandler, `Data receive is: ${JSON.stringify(data)}`)
-        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize, filterText, sortAsc } = data
+        const { applicationIds, channels, cloudAgentId, cloudTenantId, conversationStates, currentPage, pageSize, filterText, sortAsc, sortDesc } = data
         const skip = (currentPage - 1) * pageSize
+        const _sortQuery = {}
+        if(sortAsc && sortAsc.length)
+        {
+            sortAsc.forEach(element => {
+                _sortQuery[element] = 1;
+            });
+        }
+        if(sortDesc && sortDesc.length)
+        {
+            sortDesc.forEach(element => {
+                _sortQuery[element] = -1;
+            });
+        }
+        if (Object.keys(_sortQuery).length === 0) 
+        {
+            _sortQuery = {
+                startedTime: -1 
+            }
+        }
+
         const _query: any = {
             applicationId: { $in: applicationIds },
             channel: { $in: channels },
@@ -56,13 +76,11 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     lastMessage: { $last: "$lastMessage" },
                     agentPicked: { $last: "$agentPicked" },
                     startedTime: { $last: "$startedTime" },
+                    lastTime: { $last: "$lastTime" },
                     participants: { $last: "$participants" }
                 }
             },
             { $match: _queryImplement },
-            { $sort: { startedTime: sortAsc === true ? 1 : -1 } },
-            { $skip: skip },
-            { $limit: pageSize },
             {
                 $lookup: {
                     from: "message",
@@ -71,7 +89,10 @@ export class FindByChannelsAndStatesCommandHandler implements ICommandHandler<Fi
                     as: "lastMessage"
                 }
             },
-            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
+            { $sort: _sortQuery },
+            { $skip: skip },
+            { $limit: pageSize }
         ])
 
         const total = this.model.aggregate([
