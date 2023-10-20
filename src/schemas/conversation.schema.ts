@@ -62,4 +62,4 @@ export class Conversation extends BaseObject<Conversation> {
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);
-ConversationSchema.index({ applicationId: 1, channel: 1, cloudTenantId: 1 });
+ConversationSchema.index({ applicationId: 1, channel: 1, cloudTenantId: 1, conversationState: 1 });
