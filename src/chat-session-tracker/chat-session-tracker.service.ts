@@ -1,20 +1,21 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
-import { Conversation, ConversationDocument, Tenant, TenantDocument } from '../schemas'
-import { ConfigService } from '@nestjs/config'
-import { CronJob } from 'cron'
-import { LoggingService } from 'src/providers/logging'
-import * as moment from 'moment'
-import { ConversationState, KAFKA_TOPIC_MONITOR, NotifyEventType, ParticipantType } from 'src/common/enums'
-import { NotifyNewMessageToAgentCommand } from 'src/cqrs'
-import { CommandBus } from '@nestjs/cqrs'
-import { KafkaClientService, KafkaService } from 'src/providers/kafka'
-import { ChatSessionManagerService } from 'src/chat-session-manager'
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Conversation, ConversationDocument, Tenant, TenantDocument } from '../schemas';
+import { ConfigService } from '@nestjs/config';
+import { CronJob } from 'cron';
+import { LoggingService } from 'src/providers/logging';
+import * as moment from 'moment';
+import { ConversationState, KAFKA_TOPIC_MONITOR, NotifyEventType, ParticipantType } from 'src/common/enums';
+import { NotifyNewMessageToAgentCommand } from 'src/cqrs';
+import { CommandBus } from '@nestjs/cqrs';
+import { KafkaClientService, KafkaService } from 'src/providers/kafka';
+import { ChatSessionManagerService } from 'src/chat-session-manager';
 
 @Injectable()
 export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy {
-    private readonly _refreshJob: CronJob
+    private readonly _refreshJobSetStatusOpen: CronJob;
+    private readonly _refreshJobSetStatusClose: CronJob;
     private _running = false;
     constructor(
         @InjectModel(Conversation.name)
@@ -28,60 +29,82 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         private kafkaService: KafkaService,
         private readonly chatSessionManagerService: ChatSessionManagerService
     ) {
-        const timeJob = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '*/5 * * * *'
-        this._refreshJob = new CronJob({
-            cronTime: timeJob,
+        const timeJobSetOpen = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '0 1 * * *';
+        const timeJobSetClose = this.configService.get("JOB_SET_CONVERSATION_TO_CLOSE") || '*/1 * * * *';
+        this._refreshJobSetStatusOpen = new CronJob({
+            cronTime: timeJobSetOpen,
             onTick: async () => {
                 if (!this._running) {
-                    this._running = true
+                    this._running = true;
                     try {
-                        await this.loggingService.debug(ChatSessionTrackerService, `Job set conversation to open running at ${moment(new Date()).format("DD/MM/YYYY HH:mm:ss")}`)
-                        await this.findAndSetStateToOpenWithConversationOutOfSLA()
+                        await this.loggingService.debug(ChatSessionTrackerService, `Job set conversation to open running at ${moment(new Date()).format("DD/MM/YYYY HH:mm:ss")}`);
+                        await this.findAndSetStateToOpenWithConversationOutOfSLA();
                     } catch (e) {
-                        this.loggingService.error(ChatSessionTrackerService, `Job set conversation to open error: ${e?.message}`)
+                        this.loggingService.error(ChatSessionTrackerService, `Job set conversation to open error: ${e?.message}`);
                     }
-                    this._running = false
+                    this._running = false;
                 } else {
-                    await this.loggingService.debug(ChatSessionTrackerService, `This job will be ignore until previous run finish!`)
+                    await this.loggingService.debug(ChatSessionTrackerService, `This job set open will be ignore until previous run finish!`);
                 }
             },
             runOnInit: false,
             context: this,
-        })
+        });
+        this._refreshJobSetStatusClose = new CronJob({
+            cronTime: timeJobSetClose,
+            onTick: async () => {
+                if (!this._running) {
+                    this._running = true;
+                    try {
+                        await this.loggingService.debug(ChatSessionTrackerService, `Job set conversation to close running at ${moment(new Date()).format("DD/MM/YYYY HH:mm:ss")}`);
+                        await this.closeConversationForConfigSetup();
+                    } catch (e) {
+                        this.loggingService.error(ChatSessionTrackerService, `Job set conversation to close error: ${e?.message}`);
+                    }
+                    this._running = false;
+                } else {
+                    await this.loggingService.debug(ChatSessionTrackerService, `This job set close will be ignore until previous run finish!`);
+                }
+            },
+            runOnInit: false,
+            context: this,
+        });
     }
 
     onModuleInit() {
-        this._refreshJob.start()
+        this._refreshJobSetStatusOpen.start();
+        this._refreshJobSetStatusClose.start();
     }
 
     onModuleDestroy() {
-        this._refreshJob.stop()
+        this._refreshJobSetStatusOpen.stop();
+        this._refreshJobSetStatusClose.stop();
     }
 
     async findAndSetStateToOpenWithConversationOutOfSLA() {
-        const findConverSation = await this.conversationModal.find({ conversationState: ConversationState.INTERACTIVE, isReply: false }).exec()
+        const findConverSation = await this.conversationModal.find({ conversationState: ConversationState.INTERACTIVE, isReply: false }).exec();
         if (!findConverSation.length) {
-            return this.loggingService.debug(ChatSessionTrackerService, `Not find conversation satisfy !`)
+            return this.loggingService.debug(ChatSessionTrackerService, `Not find conversation satisfy !`);
         } else {
             for (let cv of findConverSation) {
-                const findConfigTenant = await this.tenantModal.findOne({ cloudTenantId: cv.cloudTenantId }).lean().exec()
-                const timeSetUp = findConfigTenant['configs'][cv.applicationId].timeSetToOpen
+                const findConfigTenant = await this.tenantModal.findOne({ cloudTenantId: cv.cloudTenantId }).lean().exec();
+                const timeSetUp = findConfigTenant['configs'][cv.applicationId].timeSetToOpen;
                 if (!timeSetUp || timeSetUp == null) {
-                    await this.loggingService.debug(ChatSessionTrackerService, `Conversation ${cv._id} of appId ${cv.applicationId} don't config SLA close !`)
+                    await this.loggingService.debug(ChatSessionTrackerService, `Conversation ${cv._id} of appId ${cv.applicationId} don't config SLA close !`);
                 } else {
-                    await this.loggingService.debug(ChatSessionTrackerService, `Conversation ${cv._id} of appId ${cv.applicationId} have config SLA is: ${timeSetUp} !`)
-                    const timeCheck = moment(cv.lastTime).add(timeSetUp, 'minutes').valueOf()
+                    await this.loggingService.debug(ChatSessionTrackerService, `Conversation ${cv._id} of appId ${cv.applicationId} have config SLA is: ${timeSetUp} !`);
+                    const timeCheck = moment(cv.lastTime).add(timeSetUp, 'minutes').valueOf();
                     if (timeCheck < moment(new Date()).valueOf()) {
-                        await this.loggingService.debug(ChatSessionTrackerService, `UnPickUp conversationId ${cv._id}`)
+                        await this.loggingService.debug(ChatSessionTrackerService, `UnPickUp conversationId ${cv._id}`);
                         const dataUpdate = await this.conversationModal.findByIdAndUpdate(cv._id, {
                             conversationState: ConversationState.OPEN,
                             agentPicked: null,
                             $pull: { participants: cv.agentPicked },
                             lastTime: new Date()
-                        }, { new: true }).lean().exec()
-                        await this.requestGetAgentOnline(dataUpdate._id, cv.agentPicked)
+                        }, { new: true }).lean().exec();
+                        await this.requestGetAgentOnline(dataUpdate._id, cv.agentPicked);
                     } else {
-                        await this.loggingService.debug(ChatSessionTrackerService, `conversationId ${cv._id} haven't run out of SLA yet !`)
+                        await this.loggingService.debug(ChatSessionTrackerService, `conversationId ${cv._id} haven't run out of SLA yet !`);
                     }
                 }
             }
@@ -89,16 +112,16 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
     }
 
     private async requestGetAgentOnline(conversationId, agentPicked) {
-        const findConverSation = await this.conversationModal.findById(conversationId).exec()
-        const { _id, cloudTenantId, applicationId } = findConverSation
-        const responseAssign = await this.chatSessionManagerService.assignAgentToSession(_id, cloudTenantId, applicationId, null, agentPicked)
+        const findConverSation = await this.conversationModal.findById(conversationId).exec();
+        const { _id, cloudTenantId, applicationId } = findConverSation;
+        const responseAssign = await this.chatSessionManagerService.assignAgentToSession(_id, cloudTenantId, applicationId, null, agentPicked);
         // 2:not find assign to assign,14 not connect to grpc assignment or acd asm
         if (responseAssign.code == 2 || responseAssign.code == 14) {
-            await this.loggingService.info(ChatSessionTrackerService, `Not find agent online to assign !`)
-            const data: any = { ...findConverSation }
-            data.event = NotifyEventType.UNASSIGN_CONVERSATION
-            data.room = [`${cloudTenantId}_${applicationId}`].join(',')
-            data.conversationId = _id
+            await this.loggingService.info(ChatSessionTrackerService, `Not find agent online to assign !`);
+            const data: any = { ...findConverSation };
+            data.event = NotifyEventType.UNASSIGN_CONVERSATION;
+            data.room = [`${cloudTenantId}_${applicationId}`].join(',');
+            data.conversationId = _id;
             // notify to agent
             await this.commandBus.execute(
                 new NotifyNewMessageToAgentCommand(
@@ -107,18 +130,18 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
                     [`${findConverSation.cloudTenantId}_${findConverSation.applicationId}`].join(','),
                     data
                 )
-            )
+            );
             // send kafka event unassign conversation
-            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_UNASSIGN_BY_SYSTEM)
+            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_UNASSIGN_BY_SYSTEM);
         } else {
-            await this.loggingService.info(ChatSessionTrackerService, `Response assign agent is: ${responseAssign.agentId}`)
-            findConverSation.conversationState = ConversationState.INTERACTIVE
-            findConverSation.agentPicked = responseAssign.agentId
-            findConverSation.save()
-            const data: any = { ...findConverSation }
-            data.event = NotifyEventType.UNASSIGN_CONVERSATION
-            data.room = [`${cloudTenantId}_${applicationId}`]
-            data.conversationId = _id
+            await this.loggingService.info(ChatSessionTrackerService, `Response assign agent is: ${responseAssign.agentId}`);
+            findConverSation.conversationState = ConversationState.INTERACTIVE;
+            findConverSation.agentPicked = responseAssign.agentId;
+            findConverSation.save();
+            const data: any = { ...findConverSation };
+            data.event = NotifyEventType.UNASSIGN_CONVERSATION;
+            data.room = [`${cloudTenantId}_${applicationId}`];
+            data.conversationId = _id;
             // notify to agent
             await this.commandBus.execute(
                 new NotifyNewMessageToAgentCommand(
@@ -127,9 +150,30 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
                     [`${cloudTenantId}_${applicationId}`].join(','),
                     data
                 )
-            )
+            );
             // send kafka event assign conversation
-            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN_BY_SYSTEM)
+            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN_BY_SYSTEM);
         }
+    }
+
+    async closeConversationForConfigSetup() {
+        const findTenant = await this.tenantModal.find({}).exec();
+        if (!findTenant || !findTenant.length) return this.loggingService.info(ChatSessionTrackerService, "Don't have channel to update !");
+        for (const appId of findTenant) {
+            for (const property in appId.configs) {
+                const timeClose = appId.configs[property].autoEndConversationTime;
+                if (timeClose == null || !timeClose) {
+                    await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} run close conversation default with 24h !`);
+                    await this.findConversationSatisfyAndClose(property, 1440);
+                } else {
+                    await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} have time to close conversation is: ${timeClose} !`);
+                    await this.findConversationSatisfyAndClose(property, timeClose);
+                }
+            }
+        }
+    }
+
+    async findConversationSatisfyAndClose(appId, timeClose) {
+        
     }
 }

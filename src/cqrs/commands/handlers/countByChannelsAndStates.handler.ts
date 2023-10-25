@@ -34,7 +34,6 @@ export class CountByChannelsAndStatesCommandHandler implements ICommandHandler<C
 
         const total = await this.model.aggregate([
             { $match: _query },
-            { $sort: { startedTime: 1 } },
             {
                 $group: {
                     _id: {

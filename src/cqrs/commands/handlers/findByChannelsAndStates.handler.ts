@@ -14,7 +14,7 @@ export class FindByChannelsAndStatesCommandHandler
     @InjectModel(Conversation.name)
     private readonly model: Model<ConversationDocument>,
     private readonly loggingService: LoggingService,
-  ) {}
+  ) { }
 
   async execute(body) {
     const data = body.body;
@@ -97,6 +97,9 @@ export class FindByChannelsAndStatesCommandHandler
           participants: { $last: '$participants' },
         },
       },
+      { $sort: _sortQuery },
+      { $skip: skip },
+      { $limit: pageSize },
       {
         $lookup: {
           from: 'message',
@@ -105,10 +108,7 @@ export class FindByChannelsAndStatesCommandHandler
           as: 'lastMessage',
         },
       },
-      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
-      { $sort: _sortQuery },
-      { $skip: skip },
-      { $limit: pageSize },
+      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } }
     ]);
 
     const total = this.model.aggregate([
