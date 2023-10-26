@@ -1,6 +1,5 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Conversation, ConversationDocument, Tenant, TenantDocument } from '../schemas';
 import { ConfigService } from '@nestjs/config';
@@ -30,7 +29,6 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         @Inject(KafkaClientService)
         private kafkaService: KafkaService,
         private readonly chatSessionManagerService: ChatSessionManagerService,
-        @InjectConnection() private readonly connection: mongoose.Connection,
     ) {
         const timeJobSetOpen = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '*/5 * * * *';
         const timeJobSetClose = this.configService.get("JOB_SET_CONVERSATION_TO_CLOSE") || '*/5 * * * *';
