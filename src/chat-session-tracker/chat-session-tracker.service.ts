@@ -141,15 +141,33 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         const findTenant = await this.tenantModal.find({}).exec();
         if (!findTenant || !findTenant.length) return this.loggingService.info(ChatSessionTrackerService, "Don't have channel to update !");
         for (const appId of findTenant) {
+            const asyncTasks = [];
+
             for (const property in appId.configs) {
                 const timeClose = appId.configs[property].autoEndConversationTime;
-                if (timeClose == null || !timeClose) {
-                    await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} run close conversation default with 24h !`);
-                    await this.findConversationSatisfyAndClose(property, 1440);
-                } else {
-                    await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} have time to close conversation is: ${timeClose} !`);
-                    await this.findConversationSatisfyAndClose(property, timeClose);
-                }
+
+                const task = async () => {
+                    if (timeClose == null || !timeClose) {
+                        await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} run close conversation default with 24h !`);
+                        await this.findConversationSatisfyAndClose(property, 1440);
+                    } else {
+                        await this.loggingService.debug(ChatSessionTrackerService, `AppId: ${property} have time to close conversation is: ${timeClose} !`);
+                        await this.findConversationSatisfyAndClose(property, timeClose);
+                    }
+                };
+
+                asyncTasks.push(task());
+            }
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Promise.all timed out after 60 seconds'));
+                }, 60000); // 60 seconds
+            });
+
+            try {
+                await Promise.race([Promise.all(asyncTasks), timeoutPromise]);
+            } catch (error) {
+                await this.loggingService.error(ChatSessionTrackerService, `Run multiple task error: ${error.message}`);
             }
         }
     }
@@ -166,14 +184,14 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
                     conversationState: ConversationState.CLOSE,
                     closedTime: new Date()
                 });
-                for (const id of listIdUpdate) {
-                    const findData = await this.conversationModal.findById(id).populate("lastMessage").lean().exec();
-                    const { cloudTenantId, applicationId } = findData;
+                const listData = await this.conversationModal.find({ _id: { $in: listIdUpdate } }).populate("lastMessage").lean().exec();
+                for (const el of listData) {
+                    const { cloudTenantId, applicationId } = el;
                     const rooms = [`${cloudTenantId}_${applicationId}`];
-                    const data: any = { ...findData };
+                    const data: any = { ...el };
                     data.event = NotifyEventType.CLOSE_CONVERSATION;
                     data.room = rooms.join(',');
-                    data.conversationId = findData._id;
+                    data.conversationId = data._id;
                     await this.notifyAndSendToKafka(cloudTenantId, applicationId, data, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE_BY_SYSTEM);
                 }
             } catch (error) {
