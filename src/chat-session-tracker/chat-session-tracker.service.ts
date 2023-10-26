@@ -32,8 +32,8 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         private readonly chatSessionManagerService: ChatSessionManagerService,
         @InjectConnection() private readonly connection: mongoose.Connection,
     ) {
-        const timeJobSetOpen = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '0 1 * * *';
-        const timeJobSetClose = this.configService.get("JOB_SET_CONVERSATION_TO_CLOSE") || '*/1 * * * *';
+        const timeJobSetOpen = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '*/5 * * * *';
+        const timeJobSetClose = this.configService.get("JOB_SET_CONVERSATION_TO_CLOSE") || '*/5 * * * *';
         this._refreshJobSetStatusOpen = new CronJob({
             cronTime: timeJobSetOpen,
             onTick: async () => {
