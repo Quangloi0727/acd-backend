@@ -1,5 +1,6 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
 import { Model } from 'mongoose';
 import { Conversation, ConversationDocument, Tenant, TenantDocument } from '../schemas';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +12,7 @@ import { NotifyNewMessageToAgentCommand } from 'src/cqrs';
 import { CommandBus } from '@nestjs/cqrs';
 import { KafkaClientService, KafkaService } from 'src/providers/kafka';
 import { ChatSessionManagerService } from 'src/chat-session-manager';
+import _ from 'underscore';
 
 @Injectable()
 export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy {
@@ -27,7 +29,8 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         private readonly commandBus: CommandBus,
         @Inject(KafkaClientService)
         private kafkaService: KafkaService,
-        private readonly chatSessionManagerService: ChatSessionManagerService
+        private readonly chatSessionManagerService: ChatSessionManagerService,
+        @InjectConnection() private readonly connection: mongoose.Connection,
     ) {
         const timeJobSetOpen = this.configService.get("JOB_SET_CONVERSATION_TO_OPEN") || '0 1 * * *';
         const timeJobSetClose = this.configService.get("JOB_SET_CONVERSATION_TO_CLOSE") || '*/1 * * * *';
@@ -122,17 +125,7 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
             data.event = NotifyEventType.UNASSIGN_CONVERSATION;
             data.room = [`${cloudTenantId}_${applicationId}`].join(',');
             data.conversationId = _id;
-            // notify to agent
-            await this.commandBus.execute(
-                new NotifyNewMessageToAgentCommand(
-                    ParticipantType.AGENT,
-                    NotifyEventType.UNASSIGN_CONVERSATION,
-                    [`${findConverSation.cloudTenantId}_${findConverSation.applicationId}`].join(','),
-                    data
-                )
-            );
-            // send kafka event unassign conversation
-            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_UNASSIGN_BY_SYSTEM);
+            await this.notifyAndSendToKafka(cloudTenantId, applicationId, data, KAFKA_TOPIC_MONITOR.CONVERSATION_UNASSIGN_BY_SYSTEM);
         } else {
             await this.loggingService.info(ChatSessionTrackerService, `Response assign agent is: ${responseAssign.agentId}`);
             findConverSation.conversationState = ConversationState.INTERACTIVE;
@@ -142,17 +135,7 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
             data.event = NotifyEventType.UNASSIGN_CONVERSATION;
             data.room = [`${cloudTenantId}_${applicationId}`];
             data.conversationId = _id;
-            // notify to agent
-            await this.commandBus.execute(
-                new NotifyNewMessageToAgentCommand(
-                    ParticipantType.AGENT,
-                    NotifyEventType.ASSIGN_CONVERSATION,
-                    [`${cloudTenantId}_${applicationId}`].join(','),
-                    data
-                )
-            );
-            // send kafka event assign conversation
-            await this.kafkaService.send(data, KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN_BY_SYSTEM);
+            await this.notifyAndSendToKafka(cloudTenantId, applicationId, data, KAFKA_TOPIC_MONITOR.CONVERSATION_ASSIGN_BY_SYSTEM);
         }
     }
 
@@ -174,6 +157,44 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
     }
 
     async findConversationSatisfyAndClose(appId, timeClose) {
-        
+        const timeCompare = moment(new Date).subtract(timeClose, 'minutes');
+        const listConversation = await this.conversationModal.find({ applicationId: appId, conversationState: ConversationState.INTERACTIVE, lastTime: { $lt: timeCompare } }).lean().exec();
+        if (!listConversation || !listConversation.length) {
+            await this.loggingService.debug(ChatSessionTrackerService, `Not find conversation interactive by appId ${appId}`);
+        } else {
+            try {
+                const listIdUpdate = _.pluck(listConversation, '_id');
+                await this.conversationModal.updateMany({ _id: { $in: listIdUpdate } }, {
+                    conversationState: ConversationState.CLOSE,
+                    closedTime: new Date()
+                });
+                for (const id of listIdUpdate) {
+                    const findData = await this.conversationModal.findById(id).populate("lastMessage").lean().exec();
+                    const { cloudTenantId, applicationId } = findData;
+                    const rooms = [`${cloudTenantId}_${applicationId}`];
+                    const data: any = { ...findData };
+                    data.event = NotifyEventType.CLOSE_CONVERSATION;
+                    data.room = rooms.join(',');
+                    data.conversationId = findData._id;
+                    await this.notifyAndSendToKafka(cloudTenantId, applicationId, data, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE_BY_SYSTEM);
+                }
+            } catch (error) {
+                await this.loggingService.error(ChatSessionTrackerService, `An error occurred ${error.message}`);
+            }
+        }
+    }
+
+    async notifyAndSendToKafka(cloudTenantId, applicationId, data, topic) {
+        // notify to agent
+        await this.commandBus.execute(
+            new NotifyNewMessageToAgentCommand(
+                ParticipantType.AGENT,
+                NotifyEventType.ASSIGN_CONVERSATION,
+                [`${cloudTenantId}_${applicationId}`].join(','),
+                data
+            )
+        );
+        // send kafka event assign conversation
+        await this.kafkaService.send(data, topic);
     }
 }

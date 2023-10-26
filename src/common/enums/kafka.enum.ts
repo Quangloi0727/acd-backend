@@ -28,4 +28,5 @@ export const enum KAFKA_TOPIC_MONITOR {
   EMAIL_UNREAD = 'ACD.Email.Unread',
   EMAIL_SPAM_MARKED = 'ACD.Email.SpamMarked',
   EMAIL_SPAM_UNMARKED = 'ACD.Email.SpamUnmarked',
+  CONVERSATION_CLOSE_BY_SYSTEM = 'ACD.Conversation.Close.By.System',
 }

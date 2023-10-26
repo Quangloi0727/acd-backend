@@ -42,6 +42,9 @@ export class Conversation extends BaseObject<Conversation> {
   @Prop({ index: true })
   startedTime: Date;
 
+  @Prop({ index: true, default: false })
+  isReply: Boolean;
+
   @Prop()
   pickConversationTime: Date;
 
