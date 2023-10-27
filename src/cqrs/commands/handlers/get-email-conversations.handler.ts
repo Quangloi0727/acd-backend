@@ -37,7 +37,7 @@ export class GetEmailConversationsCommandHandler
         },
       },
     ];
-    if (command.query) {
+    if (command.query && command.query != '') {
       matchQueries.push({ Subject: { $regex: command.query, $options: 'i' } });
     }
     if (command.emails) {
@@ -50,6 +50,17 @@ export class GetEmailConversationsCommandHandler
     }
     if (command.onlyUnread == true) {
       matchQueries.push({ Readed: false });
+    }
+    switch (command.state) {
+      case 'OPEN':
+        matchQueries.push({ AgentId: null });
+        break;
+      case 'INTERACTIVE':
+        matchQueries.push({ AgentId: { $ne: null } });
+        break;
+      case 'CLOSED':
+        matchQueries.push({ IsClosed: { $in: [true, null] } });
+        break;
     }
     const result = await this.model
       .find({

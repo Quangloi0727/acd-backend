@@ -53,6 +53,12 @@ export class EmailConversation extends BaseObject<EmailConversation> {
   RelatedEmailId: string;
   @Prop()
   TimeReply: Date;
+  @Prop({ default: false })
+  IsClosed: boolean;
+  @Prop()
+  ClosedDate: Date | null;
+  @Prop()
+  ClosedByAgent: number | null;
 }
 
 export const EmailConversationSchema =
