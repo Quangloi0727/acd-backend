@@ -192,8 +192,18 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
                     data.event = NotifyEventType.CLOSE_CONVERSATION;
                     data.room = rooms.join(',');
                     data.conversationId = data._id;
-                    await this.notifyAndSendToKafka(cloudTenantId, applicationId, data, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE_BY_SYSTEM);
+                    // notify to agent
+                    await this.commandBus.execute(
+                        new NotifyNewMessageToAgentCommand(
+                            ParticipantType.AGENT,
+                            NotifyEventType.ASSIGN_CONVERSATION,
+                            [`${cloudTenantId}_${applicationId}`].join(','),
+                            data
+                        )
+                    );
                 }
+                const dataSendKafka = this.convertAndGroupDataSendKafka(listData);
+                await this.kafkaService.send(dataSendKafka, KAFKA_TOPIC_MONITOR.CONVERSATION_CLOSE_BY_SYSTEM);
             } catch (error) {
                 await this.loggingService.error(ChatSessionTrackerService, `An error occurred ${error.message}`);
             }
@@ -212,5 +222,27 @@ export class ChatSessionTrackerService implements OnModuleInit, OnModuleDestroy 
         );
         // send kafka event assign conversation
         await this.kafkaService.send(data, topic);
+    }
+
+    convertAndGroupDataSendKafka(originalData) {
+        const transformedData = originalData.reduce((result, item) => {
+            const cloudTenantId = item.cloudTenantId.toString();
+            if (!result[cloudTenantId]) {
+                result[cloudTenantId] = { tenantId: cloudTenantId, conversations: [] };
+            }
+            result[cloudTenantId].conversations.push({
+                conversationId: item._id,
+                agentPicked: item.agentPicked,
+                conversationState: item.conversationState,
+                channel: item.channel,
+                applicationId: item.applicationId,
+                senderId: item.senderId
+            });
+            return result;
+        }, {});
+
+        const finalResult = Object.values(transformedData);
+
+        return finalResult;
     }
 }
