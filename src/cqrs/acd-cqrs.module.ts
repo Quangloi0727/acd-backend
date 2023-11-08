@@ -47,9 +47,13 @@ import {
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
   AssignAgentToConversationCommandHandler,
+  AgentPickConversationCommandHandler,
+  CloseEmailConversationCommandHandler,
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
   GetChatConversationByIdCommandHandler,
+  FireKafkaEventCommandHandler,
+  ReopenEmailConversationCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -97,9 +101,13 @@ const handlers = [
   MarkEmailAsSpamCommandHandler,
   MarkEmailAsUnreadCommandHandler,
   AssignAgentToConversationCommandHandler,
+  AgentPickConversationCommandHandler,
+  CloseEmailConversationCommandHandler,
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
   GetChatConversationByIdCommandHandler,
+  FireKafkaEventCommandHandler,
+  ReopenEmailConversationCommandHandler,
 ];
 
 @Module({

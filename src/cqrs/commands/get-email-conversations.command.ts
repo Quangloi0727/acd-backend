@@ -12,5 +12,6 @@ export class GetEmailConversationsCommand implements ICommand {
     public emails: string,
     public fromDate: Date,
     public toDate: Date,
+    public state: string,
   ) {}
 }

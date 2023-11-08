@@ -3,34 +3,40 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EmailConversation, EmailConversationDocument } from '../../../schemas';
 import { CountEmailConversationCommand } from '../count-email-conversation.command';
+import { LoggingService } from '../../../providers/logging';
 
 @CommandHandler(CountEmailConversationCommand)
 export class CountEmailConversationCommandHandler
   implements ICommandHandler<CountEmailConversationCommand, any>
 {
   constructor(
+    private readonly loggingService: LoggingService,
     @InjectModel(EmailConversation.name)
     private readonly model: Model<EmailConversationDocument>,
   ) {}
 
   async execute(command: CountEmailConversationCommand): Promise<any> {
+    await this.loggingService.debug(
+      CountEmailConversationCommandHandler,
+      `Request: ${JSON.stringify(command)}`,
+    );
     const results = await this.model.aggregate([
       {
         $group: {
           _id: null,
-          unreadEmail: {
+          openEmail: {
             $sum: {
               $cond: [
                 {
                   $and: [
+                    { $eq: ['$TenantId', command.tenantId] },
                     {
                       $in: [
-                        '$AgentId',
-                        command.agentIds.split(',').map((i) => Number(i)),
+                        { $type: '$AgentId' },
+                        ['null', 'missing', 'undefined'],
                       ],
                     },
-                    { $eq: ['$TenantId', command.tenantId] },
-                    { $eq: ['$Readed', false] },
+                    { $ne: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
@@ -52,6 +58,7 @@ export class CountEmailConversationCommandHandler
                       ],
                     },
                     { $eq: ['$TenantId', command.tenantId] },
+                    { $ne: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
@@ -61,7 +68,7 @@ export class CountEmailConversationCommandHandler
               ],
             },
           },
-          spamEmail: {
+          closedEmail: {
             $sum: {
               $cond: [
                 {
@@ -73,7 +80,8 @@ export class CountEmailConversationCommandHandler
                       ],
                     },
                     { $eq: ['$TenantId', command.tenantId] },
-                    { $eq: ['$SpamMarked', true] },
+                    { $eq: ['$IsClosed', true] },
+                    { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
                 },
@@ -85,15 +93,19 @@ export class CountEmailConversationCommandHandler
         },
       },
     ]);
+    await this.loggingService.debug(
+      CountEmailConversationCommandHandler,
+      `Result: ${JSON.stringify(results)}`,
+    );
     if (results) {
       const result = results[0];
       delete result['_id'];
       return result;
     }
     return {
-      unreadEmail: 0,
+      openEmail: 0,
       assignEmail: 0,
-      spamEmail: 0,
+      closedEmail: 0,
     };
   }
 }

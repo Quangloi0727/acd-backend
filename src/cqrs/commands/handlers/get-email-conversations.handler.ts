@@ -22,12 +22,11 @@ export class GetEmailConversationsCommandHandler
   async execute(
     command: GetEmailConversationsCommand,
   ): Promise<[EmailConversationDocument[], number]> {
-    // await this.loggingService.debug(
-    //   GetEmailConversationsCommandHandler,
-    //   `Data receive is: ${JSON.stringify(command)}`,
-    // );
+    await this.loggingService.debug(
+      GetEmailConversationsCommandHandler,
+      `Data receive is: ${JSON.stringify(command)}`,
+    );
     const matchQueries: FilterQuery<EmailConversationDocument>[] = [
-      { AgentId: { $in: command.agentId.split(',') } },
       { IsDeleted: false },
       { TenantId: command.tenantId },
       {
@@ -37,7 +36,7 @@ export class GetEmailConversationsCommandHandler
         },
       },
     ];
-    if (command.query) {
+    if (command.query && command.query != '') {
       matchQueries.push({ Subject: { $regex: command.query, $options: 'i' } });
     }
     if (command.emails) {
@@ -50,6 +49,24 @@ export class GetEmailConversationsCommandHandler
     }
     if (command.onlyUnread == true) {
       matchQueries.push({ Readed: false });
+    }
+    switch (command.state) {
+      case 'OPEN':
+        matchQueries.push({ AgentId: null, IsClosed: { $ne: true } });
+        break;
+      case 'INTERACTIVE':
+        matchQueries.push({
+          AgentId: { $in: command.agentId.split(',') },
+          IsClosed: { $ne: true },
+        });
+        break;
+      case 'CLOSED':
+        matchQueries.push({
+          AgentId: { $in: command.agentId.split(',') },
+          IsClosed: true,
+          SpamMarked: { $ne: true },
+        });
+        break;
     }
     const result = await this.model
       .find({
