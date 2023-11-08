@@ -27,3 +27,5 @@ export * from './event-publisher.handler';
 export * from './get-chat-conversation-by-id.handler';
 export * from './agent-pick-conversation.handler';
 export * from './close-email-conversation.handler';
+export * from './fire-kafka-event.handler';
+export * from './reopen-email-conversation.handler';

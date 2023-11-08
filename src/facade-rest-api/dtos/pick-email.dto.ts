@@ -1,6 +1,6 @@
-import { IsNumber } from "class-validator";
-import { Type } from "class-transformer";
-import { ApiProperty } from "@nestjs/swagger";
+import { IsArray, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PickEmailDto {
   @IsNumber()
@@ -12,5 +12,6 @@ export class PickEmailDto {
   tenantId: number;
 
   @ApiProperty({ required: true })
-  emailId: string;
+  @IsArray()
+  emailIds: string[];
 }

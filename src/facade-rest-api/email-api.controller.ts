@@ -13,10 +13,12 @@ import {
 import { MarkAsReadDto, MarkAsSpamDto, MarkAsUnreadDto } from './dtos';
 import { SendEmailDto } from './dtos/send-email.dto';
 import { AssignEmailDto } from './dtos/assign-email.dto';
-import { PickEmailDto } from "./dtos/pick-email.dto";
-import { CloseEmailDto } from "./dtos/close-email.dto";
-import { AgentPickConversationCommand } from "../cqrs/commands/agent-pick-conversation.command";
-import { CloseEmailConversationCommand } from "../cqrs/commands/close-email-conversation.command";
+import { PickEmailDto } from './dtos/pick-email.dto';
+import { CloseEmailDto } from './dtos/close-email.dto';
+import { AgentPickConversationCommand } from '../cqrs/commands/agent-pick-conversation.command';
+import { CloseEmailConversationCommand } from '../cqrs/commands/close-email-conversation.command';
+import { ReopenEmailDto } from './dtos/creopen-email.dto';
+import { ReopenEmailConversationCommand } from '../cqrs/commands/reopen-email-conversation.command';
 
 @Controller('email')
 export class EmailManagerApiController {
@@ -58,7 +60,7 @@ export class EmailManagerApiController {
         emails,
         fromdate ? new Date(Date.parse(fromdate)) : new Date(0),
         todate ? new Date(Date.parse(todate)) : new Date(),
-        state
+        state,
       ),
     );
 
@@ -124,6 +126,13 @@ export class EmailManagerApiController {
   async closeEmail(@Body() request: CloseEmailDto) {
     return await this.commandBus.execute(
       new CloseEmailConversationCommand(request),
+    );
+  }
+
+  @Post('/reopen')
+  async reopenEmail(@Body() request: ReopenEmailDto) {
+    return await this.commandBus.execute(
+      new ReopenEmailConversationCommand(request),
     );
   }
 }

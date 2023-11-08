@@ -52,6 +52,8 @@ import {
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
   GetChatConversationByIdCommandHandler,
+  FireKafkaEventCommandHandler,
+  ReopenEmailConversationCommandHandler,
 } from './commands';
 import {
   EmailReceivedEventHandler,
@@ -104,6 +106,8 @@ const handlers = [
   NotifyNewEmailToAgentCommandHandler,
   EventPublisherCommandHandler,
   GetChatConversationByIdCommandHandler,
+  FireKafkaEventCommandHandler,
+  ReopenEmailConversationCommandHandler,
 ];
 
 @Module({
