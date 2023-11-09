@@ -19,6 +19,6 @@ export class GetEmailDetailCommandHandler
       .find({
         conversationId: new ObjectId(command.conversationId),
       })
-      .sort({ ReceivedTime: 1 });
+      .sort({ ReceivedTime: -1 });
   }
 }
