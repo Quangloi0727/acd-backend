@@ -20,6 +20,10 @@ export class CountEmailConversationCommandHandler
       CountEmailConversationCommandHandler,
       `Request: ${JSON.stringify(command)}`,
     );
+    const applicationQuery =
+      command.applicationIds && command.applicationIds.split(',').length
+        ? { $in: ['$ToEmail', command.applicationIds.split(',')] }
+        : {};
     const results = await this.model.aggregate([
       {
         $group: {
@@ -36,6 +40,7 @@ export class CountEmailConversationCommandHandler
                         ['null', 'missing', 'undefined'],
                       ],
                     },
+                    applicationQuery,
                     { $ne: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },

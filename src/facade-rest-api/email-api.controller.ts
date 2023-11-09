@@ -28,9 +28,14 @@ export class EmailManagerApiController {
   async getCountEmailByAgentId(
     @Query('tenantId') tenantId: string,
     @Query('userIds') ids: string,
+    @Query('applicationIds') applicationIds: string,
   ) {
     return this.commandBus.execute(
-      new CountEmailConversationCommand(Number(tenantId ?? 0) ?? 0, ids),
+      new CountEmailConversationCommand(
+        Number(tenantId ?? 0) ?? 0,
+        ids,
+        applicationIds,
+      ),
     );
   }
 
@@ -39,6 +44,7 @@ export class EmailManagerApiController {
     @Query('tenantId') tenantId: string,
     @Query('query') query: string,
     @Query('userIds') ids: string,
+    @Query('applicationIds') applicationIds: string,
     @Query('onlySpam') onlySpam: string,
     @Query('onlyUnread') onlyUnread: string,
     @Query('skip') skip: number,
@@ -53,6 +59,7 @@ export class EmailManagerApiController {
         Number(tenantId ?? 0) ?? 0,
         query,
         ids,
+        applicationIds,
         onlySpam == 'true' ? true : false,
         onlyUnread == 'true' ? true : false,
         Number(skip ?? 0),

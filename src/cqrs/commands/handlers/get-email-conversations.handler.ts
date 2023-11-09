@@ -50,19 +50,29 @@ export class GetEmailConversationsCommandHandler
     if (command.onlyUnread == true) {
       matchQueries.push({ Readed: false });
     }
+
+    if (
+      command.applicationIds &&
+      command.applicationIds.split(',').length > 0
+    ) {
+      matchQueries.push({
+        ToEmail: { $in: command.applicationIds.split(',') },
+      });
+    }
+
     switch (command.state) {
       case 'OPEN':
         matchQueries.push({ AgentId: null, IsClosed: { $ne: true } });
         break;
       case 'INTERACTIVE':
         matchQueries.push({
-          AgentId: { $in: command.agentId.split(',') },
+          AgentId: { $in: command.agentIds.split(',') },
           IsClosed: { $ne: true },
         });
         break;
       case 'CLOSED':
         matchQueries.push({
-          AgentId: { $in: command.agentId.split(',') },
+          AgentId: { $in: command.agentIds.split(',') },
           IsClosed: true,
           SpamMarked: { $ne: true },
         });
