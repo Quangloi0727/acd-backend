@@ -24,6 +24,22 @@ export class CountEmailConversationCommandHandler
       command.applicationIds && command.applicationIds.split(',').length
         ? { $in: ['$ToEmail', command.applicationIds.split(',')] }
         : {};
+    let replyQuery = {};
+    if (command.replyStatus && command.replyStatus.split(',').length) {
+      const status = command.replyStatus.split(',');
+      if (status.includes('RESPONSED') && !status.includes('NORESPONSED')) {
+        replyQuery = {
+          $ifNull: ['$RelatedEmailId', false],
+        };
+      } else if (
+        !status.includes('RESPONSED') &&
+        status.includes('NORESPONSED')
+      ) {
+        replyQuery = {
+          $in: [{ $type: '$RelatedEmailId' }, ['null', 'missing', 'undefined']],
+        };
+      }
+    }
     const results = await this.model.aggregate([
       {
         $group: {
@@ -41,6 +57,7 @@ export class CountEmailConversationCommandHandler
                       ],
                     },
                     applicationQuery,
+                    replyQuery,
                     { $ne: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
@@ -62,6 +79,8 @@ export class CountEmailConversationCommandHandler
                         command.agentIds.split(',').map((i) => Number(i)),
                       ],
                     },
+                    applicationQuery,
+                    replyQuery,
                     { $eq: ['$TenantId', command.tenantId] },
                     { $ne: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },
@@ -84,6 +103,8 @@ export class CountEmailConversationCommandHandler
                         command.agentIds.split(',').map((i) => Number(i)),
                       ],
                     },
+                    applicationQuery,
+                    replyQuery,
                     { $eq: ['$TenantId', command.tenantId] },
                     { $eq: ['$IsClosed', true] },
                     { $ne: ['$SpamMarked', true] },

@@ -60,6 +60,21 @@ export class GetEmailConversationsCommandHandler
       });
     }
 
+    if (command.replyStatus && command.replyStatus.split(',').length > 0) {
+      const status = command.replyStatus.split(',');
+      if (status.includes('RESPONSED') && !status.includes('NORESPONSED')) {
+        matchQueries.push({
+          RelatedEmailId: { $exists: true },
+        });
+      } else if (
+        !status.includes('RESPONSED') &&
+        status.includes('NORESPONSED')
+      ) {
+        matchQueries.push({
+          RelatedEmailId: { $exists: false },
+        });
+      }
+    }
     switch (command.state) {
       case 'OPEN':
         matchQueries.push({ AgentId: null, IsClosed: { $ne: true } });
