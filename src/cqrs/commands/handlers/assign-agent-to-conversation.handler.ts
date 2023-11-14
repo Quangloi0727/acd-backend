@@ -30,7 +30,11 @@ export class AssignAgentToConversationCommandHandler
         },
       },
       {
-        $set: { AgentId: command.agentId, AssignedDate: new Date() },
+        $set: {
+          AgentId: command.agentId,
+          AssignedDate: new Date(),
+          IsClosed: false,
+        },
       },
     );
   }

@@ -5,5 +5,6 @@ export class CountEmailConversationCommand implements ICommand {
     public tenantId: number,
     public agentIds: string,
     public applicationIds: string,
+    public replyStatus: string,
   ) {}
 }

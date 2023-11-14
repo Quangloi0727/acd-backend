@@ -29,12 +29,14 @@ export class EmailManagerApiController {
     @Query('tenantId') tenantId: string,
     @Query('userIds') ids: string,
     @Query('applicationIds') applicationIds: string,
+    @Query('replyStatus') replyStatus: string,
   ) {
     return this.commandBus.execute(
       new CountEmailConversationCommand(
         Number(tenantId ?? 0) ?? 0,
         ids,
         applicationIds,
+        replyStatus,
       ),
     );
   }
@@ -53,6 +55,7 @@ export class EmailManagerApiController {
     @Query('fromdate') fromdate: string,
     @Query('todate') todate: string,
     @Query('state') state: string,
+    @Query('replyStatus') replyStatus: string,
   ) {
     const [result, total] = await this.commandBus.execute(
       new GetEmailConversationsCommand(
@@ -68,6 +71,7 @@ export class EmailManagerApiController {
         fromdate ? new Date(Date.parse(fromdate)) : new Date(0),
         todate ? new Date(Date.parse(todate)) : new Date(),
         state,
+        replyStatus,
       ),
     );
 
