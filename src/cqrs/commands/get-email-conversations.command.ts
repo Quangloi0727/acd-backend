@@ -1,19 +1,15 @@
 import { ICommand } from '@nestjs/cqrs';
+import { ConversationState } from 'src/common/enums'
 
 export class GetEmailConversationsCommand implements ICommand {
   constructor(
     public tenantId: number,
-    public query: string,
-    public agentIds: string,
-    public applicationIds: string,
-    public onlySpam: boolean,
-    public onlyUnread: boolean,
+    public assignedAgentIds: number[],
+    public applicationIds: string[],
     public skip: number,
     public take: number,
-    public emails: string,
-    public fromDate: Date,
-    public toDate: Date,
-    public state: string,
+    public state: ConversationState,
     public replyStatus: string,
+    public onlyUnread: boolean,
   ) {}
 }

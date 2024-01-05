@@ -20,13 +20,18 @@ export class CountEmailConversationCommandHandler
       CountEmailConversationCommandHandler,
       `Request: ${JSON.stringify(command)}`,
     );
-    const applicationQuery =
-      command.applicationIds && command.applicationIds.split(',').length
-        ? { $in: ['$ToEmail', command.applicationIds.split(',')] }
-        : {};
+    let applicationQuery = {};
+    if (command.applicationIds && command.applicationIds.length) {
+      applicationQuery = {
+        $regexMatch: {
+          input: "$ToEmail",
+          regex : new RegExp(command.applicationIds.join("|"), "i")
+        },
+      };
+    }
     let replyQuery = {};
-    if (command.replyStatus && command.replyStatus.split(',').length) {
-      const status = command.replyStatus.split(',');
+    if (command.replyStatus && command.replyStatus.length) {
+      const status = command.replyStatus;
       if (status.includes('RESPONSED') && !status.includes('NORESPONSED')) {
         replyQuery = {
           $ifNull: ['$RelatedEmailId', false],
@@ -44,7 +49,7 @@ export class CountEmailConversationCommandHandler
       {
         $group: {
           _id: null,
-          openEmail: {
+          pendingEmail: {
             $sum: {
               $cond: [
                 {
@@ -59,7 +64,6 @@ export class CountEmailConversationCommandHandler
                     applicationQuery,
                     replyQuery,
                     { $ne: ['$IsClosed', true] },
-                    { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
                 },
@@ -73,17 +77,11 @@ export class CountEmailConversationCommandHandler
               $cond: [
                 {
                   $and: [
-                    {
-                      $in: [
-                        '$AgentId',
-                        command.agentIds.split(',').map((i) => Number(i)),
-                      ],
-                    },
                     applicationQuery,
                     replyQuery,
+                    { $in: ['$AgentId', command.assignedAgentIds || []]},
                     { $eq: ['$TenantId', command.tenantId] },
                     { $ne: ['$IsClosed', true] },
-                    { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
                 },
@@ -97,17 +95,10 @@ export class CountEmailConversationCommandHandler
               $cond: [
                 {
                   $and: [
-                    {
-                      $in: [
-                        '$AgentId',
-                        command.agentIds.split(',').map((i) => Number(i)),
-                      ],
-                    },
                     applicationQuery,
                     replyQuery,
                     { $eq: ['$TenantId', command.tenantId] },
                     { $eq: ['$IsClosed', true] },
-                    { $ne: ['$SpamMarked', true] },
                     { $eq: ['$IsDeleted', false] },
                   ],
                 },

@@ -4,6 +4,7 @@ import { FilterQuery, Model } from 'mongoose';
 import { EmailConversation, EmailConversationDocument } from '../../../schemas';
 import { GetEmailConversationsCommand } from '../get-email-conversations.command';
 import { LoggingService } from '../../../providers/logging';
+import { ConversationState } from 'src/common/enums'
 
 @CommandHandler(GetEmailConversationsCommand)
 export class GetEmailConversationsCommandHandler
@@ -29,65 +30,29 @@ export class GetEmailConversationsCommandHandler
     const matchQueries: FilterQuery<EmailConversationDocument>[] = [
       { IsDeleted: false },
       { TenantId: command.tenantId },
-      {
-        ReceivedTime: {
-          $gte: command.fromDate,
-          $lte: command.toDate,
-        },
-      },
     ];
-    if (command.query && command.query != '') {
-      matchQueries.push({ Subject: { $regex: command.query, $options: 'i' } });
-    }
-    if (command.emails) {
-      matchQueries.push({ ToEmail: { $in: command.emails.split(',') } });
-    }
-    if (command.onlySpam == true) {
-      matchQueries.push({ SpamMarked: true });
-    } else {
-      matchQueries.push({ SpamMarked: false });
-    }
     if (command.onlyUnread == true) {
       matchQueries.push({ Readed: false });
     }
 
-    if (
-      command.applicationIds &&
-      command.applicationIds.split(',').length > 0
-    ) {
+    if (command.applicationIds && command.applicationIds.length > 0) {
       matchQueries.push({
-        ToEmail: { $in: command.applicationIds.split(',') },
+        ToEmail: { $regex: new RegExp(command.applicationIds.join("|"), "i") },
       });
     }
-
-    if (command.replyStatus && command.replyStatus.split(',').length > 0) {
-      const status = command.replyStatus.split(',');
-      if (status.includes('RESPONSED') && !status.includes('NORESPONSED')) {
-        matchQueries.push({
-          RelatedEmailId: { $exists: true },
-        });
-      } else if (
-        !status.includes('RESPONSED') &&
-        status.includes('NORESPONSED')
-      ) {
-        matchQueries.push({
-          RelatedEmailId: { $exists: false },
-        });
-      }
-    }
     switch (command.state) {
-      case 'OPEN':
+      case ConversationState.OPEN:
         matchQueries.push({ AgentId: null, IsClosed: { $ne: true } });
         break;
-      case 'INTERACTIVE':
+      case ConversationState.INTERACTIVE:
         matchQueries.push({
-          AgentId: { $in: command.agentIds.split(',') },
+          AgentId: { $in: command.assignedAgentIds },
           IsClosed: { $ne: true },
         });
         break;
-      case 'CLOSED':
+      case ConversationState.CLOSE:
         matchQueries.push({
-          AgentId: { $in: command.agentIds.split(',') },
+          AgentId: { $in: command.assignedAgentIds },
           IsClosed: true,
           SpamMarked: { $ne: true },
         });

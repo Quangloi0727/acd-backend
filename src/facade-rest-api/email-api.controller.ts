@@ -19,59 +19,39 @@ import { AgentPickConversationCommand } from '../cqrs/commands/agent-pick-conver
 import { CloseEmailConversationCommand } from '../cqrs/commands/close-email-conversation.command';
 import { ReopenEmailDto } from './dtos/creopen-email.dto';
 import { ReopenEmailConversationCommand } from '../cqrs/commands/reopen-email-conversation.command';
+import { EmailCountRequest } from './dtos/email-count-request'
+import { GetEmailConversationRequest } from './dtos/email-get-conversations-request'
 
 @Controller('email')
 export class EmailManagerApiController {
   constructor(private readonly commandBus: CommandBus) {}
 
-  @Get('/stats')
-  async getCountEmailByAgentId(
-    @Query('tenantId') tenantId: string,
-    @Query('userIds') ids: string,
-    @Query('applicationIds') applicationIds: string,
-    @Query('replyStatus') replyStatus: string,
-  ) {
+  @Post('/stats')
+  async getCountEmailByAgentId(@Body() request: EmailCountRequest) {
     return this.commandBus.execute(
       new CountEmailConversationCommand(
-        Number(tenantId ?? 0) ?? 0,
-        ids,
-        applicationIds,
-        replyStatus,
+        request.tenantId,
+        request.assignedAgentIds,
+        request.applicationIds,
+        request.replyStatus,
       ),
     );
   }
 
-  @Get('/list')
+  @Post('/list')
   async getConversations(
-    @Query('tenantId') tenantId: string,
-    @Query('query') query: string,
-    @Query('userIds') ids: string,
-    @Query('applicationIds') applicationIds: string,
-    @Query('onlySpam') onlySpam: string,
-    @Query('onlyUnread') onlyUnread: string,
-    @Query('skip') skip: number,
-    @Query('take') take: number,
-    @Query('emails') emails: string,
-    @Query('fromdate') fromdate: string,
-    @Query('todate') todate: string,
-    @Query('state') state: string,
-    @Query('replyStatus') replyStatus: string,
+    @Body() request: GetEmailConversationRequest
   ) {
     const [result, total] = await this.commandBus.execute(
       new GetEmailConversationsCommand(
-        Number(tenantId ?? 0) ?? 0,
-        query,
-        ids,
-        applicationIds,
-        onlySpam == 'true' ? true : false,
-        onlyUnread == 'true' ? true : false,
-        Number(skip ?? 0),
-        Number(take ?? 10),
-        emails,
-        fromdate ? new Date(Date.parse(fromdate)) : new Date(0),
-        todate ? new Date(Date.parse(todate)) : new Date(),
-        state,
-        replyStatus,
+        request.tenantId,
+        request.assignedAgentIds,
+        request.applicationIds,
+        request.skip,
+        request.take,
+        request.state,
+        request.replyStatus,    
+        request.onlyUnread,
       ),
     );
 
